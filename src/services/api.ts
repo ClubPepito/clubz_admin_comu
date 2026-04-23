@@ -38,29 +38,91 @@ api.interceptors.response.use(
 export const authService = {
   login: (data: any) => api.post('/auth/login', data),
   getMe: () => api.get('/auth/me'),
+  updateProfile: (data: any) => api.patch('/auth/me', data),
 };
 
 export const eventService = {
+  // Core Events
   getAll: (communityId?: string | null) => 
     api.get('/events', { params: communityId ? { communityId } : {} }),
   getOne: (id: string) => api.get(`/events/${id}`),
   create: (data: any) => api.post('/events', data),
+  update: (id: string, data: any) => api.patch(`/events/${id}`, data),
+  delete: (id: string) => api.delete(`/events/${id}`),
+  
+  // Tickets
+  getTicketTypes: (id: string) => api.get(`/events/${id}/tickets`),
+  createTicketType: (id: string, data: any) => api.post(`/events/${id}/tickets`, data),
+  
+  // Analytics & Activity
   getStats: (id: string) => api.get(`/events/${id}/analytics`),
-  getGlobalStats: (communityId?: string | null) => 
-    api.get('/events/stats/global', { params: communityId ? { communityId } : {} }),
+  getGlobalStats: (communityId?: string) => api.get('/events/stats/global', { params: { communityId } }),
   getGlobalHistory: (communityId?: string | null) => 
     api.get('/events/stats/history', { params: communityId ? { communityId } : {} }),
   getRecentActivity: (communityId?: string | null) => 
     api.get('/events/activity/recent', { params: communityId ? { communityId } : {} }),
-  autoGenerate: (url: string) => api.post('/events/auto-generate', { url }),
+  
+  // Participation & Check-in
   getAttendees: (id: string) => api.get(`/events/${id}/attendees`),
-  checkIn: (eventId: string, ticketId: string) => api.post(`/events/${eventId}/check-in/${ticketId}`),
+  checkIn: (eventId: string, qrCodeToken: string) => 
+    api.patch(`/events/${eventId}/check-in`, { qrCodeToken }),
+  
+  // AI & Utils
+  autoGenerate: (url: string) => api.post('/events/auto-generate', { url }),
+  getCalendar: (id: string) => api.get(`/events/${id}/calendar`),
+  
+  // Gamification
+  getGamification: (id: string) => api.get(`/events/${id}/gamification`),
+  updateGamification: (id: string, data: any) => api.patch(`/events/${id}/gamification`, data),
 };
 
 export const communityService = {
+  // Core Community
   getAll: () => api.get('/communities'),
-  getMembers: (communityId?: string | null) => 
+  getOne: (id: string) => api.get(`/communities/${id}`),
+  create: (data: any) => api.post('/communities', data),
+  update: (id: string, data: any) => api.patch(`/communities/${id}`, data),
+  
+  // Members & Invitations
+  getMembers: (communityId: string) => api.get(`/communities/${communityId}/members`),
+  getMyMembers: (communityId?: string | null) => 
     api.get('/communities/my-members', { params: communityId ? { communityId } : {} }),
+  getPendingRequests: (communityId: string) => api.get(`/communities/${communityId}/requests`),
+  getChannels: (communityId: string) => api.get(`/communities/${communityId}/channels`),
+  respondToRequest: (communityId: string, userId: string, action: 'accept' | 'reject') => 
+    api.post(`/communities/${communityId}/requests/${userId}/${action}`),
+  inviteMember: (communityId: string, userId: string) => 
+    api.post(`/communities/${communityId}/invite`, { userId }),
+  kickMember: (communityId: string, userId: string) => 
+    api.delete(`/communities/${communityId}/members/${userId}`),
+  removeMember: (communityId: string, userId: string) => 
+    api.delete(`/communities/${communityId}/members/${userId}`),
+  
+  // Roles
+  getRoles: (communityId: string) => api.get(`/communities/${communityId}/roles`),
+  updateMemberRole: (communityId: string, userId: string, roleId: string) => 
+    api.post(`/communities/${communityId}/roles/assign`, { userId, roleId }),
+    
+  // Widgets
+  getWidgets: (communityId: string) => api.get(`/widget-library/community/${communityId}`),
+  toggleWidget: (communityId: string, widgetId: string, enabled: boolean) => 
+    api.patch(`/widget-library/${widgetId}`, { enabled }),
+};
+
+export const postService = {
+  getAll: (communityId: string) => api.get(`/posts/community/${communityId}`),
+  create: (data: any) => api.post('/posts', data),
+  delete: (id: string) => api.delete(`/posts/${id}`),
+  like: (id: string) => api.post(`/posts/${id}/like`),
+};
+
+export const roomService = {
+  getAll: (communityId?: string | null) => 
+    api.get('/rooms', { params: communityId ? { communityId } : {} }),
+  getOne: (id: string) => api.get(`/rooms/${id}`),
+  create: (data: any) => api.post('/rooms', data),
+  join: (id: string) => api.post(`/rooms/${id}/join`),
+  getMembers: (id: string) => api.get(`/rooms/${id}/members`),
 };
 
 export default api;

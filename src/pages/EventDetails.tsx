@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   TrendingUp, 
   ArrowLeft, 
@@ -12,8 +12,11 @@ import {
   CheckCircle2,
   MapPin,
   Calendar as CalendarIcon,
-  Loader2
+  Loader2,
+  Pencil,
+  Trash2
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { 
   XAxis, 
   YAxis, 
@@ -42,6 +45,7 @@ import toast from 'react-hot-toast';
 
 const EventDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [tab, setTab] = useState('analytics');
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -88,6 +92,34 @@ const EventDetails = () => {
     }
   };
 
+  const handleExportCalendar = async () => {
+    if (!id) return;
+    try {
+      const res = await eventService.getCalendar(id);
+      const blob = new Blob([res.data], { type: 'text/calendar' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${event.title}.ics`);
+      document.body.appendChild(link);
+      link.click();
+      toast.success('Calendrier exporté !');
+    } catch (err) {
+      toast.error('Erreur lors de l\'export');
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!id || !confirm('Voulez-vous vraiment supprimer cet événement ?')) return;
+    try {
+      await eventService.delete(id);
+      toast.success('Événement supprimé');
+      navigate('/events');
+    } catch (err) {
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -128,7 +160,20 @@ const EventDetails = () => {
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <h2 className="text-4xl font-black tracking-tighter">{event.title}</h2>
-              <Badge variant="secondary" className="bg-success/10 text-success border-success/20 font-black uppercase text-[10px] tracking-widest px-3 py-1">PUBLIÉ</Badge>
+              <Badge 
+                variant="secondary" 
+                className={cn(
+                  "font-black uppercase text-[10px] tracking-widest px-3 py-1",
+                  event.status === 'published' ? "bg-success/10 text-success border-success/20" :
+                  event.status === 'draft' ? "bg-warning/10 text-warning border-warning/20" :
+                  event.status === 'cancelled' ? "bg-destructive/10 text-destructive border-destructive/20" :
+                  "bg-muted text-muted-foreground border-muted-foreground/20"
+                )}
+              >
+                {event.status === 'published' ? 'PUBLIÉ' :
+                 event.status === 'draft' ? 'BROUILLON' :
+                 event.status === 'cancelled' ? 'ANNULÉ' : 'TERMINÉ'}
+              </Badge>
             </div>
             <div className="flex flex-wrap items-center gap-5 text-sm font-bold text-muted-foreground uppercase tracking-tight">
               <span className="flex items-center gap-2"><CalendarIcon size={16} className="text-primary" strokeWidth={2.5} /> {new Date(event.startDate).toLocaleDateString()}</span>
@@ -138,20 +183,32 @@ const EventDetails = () => {
           </div>
         </div>
         <div className="flex gap-3 w-full lg:w-auto">
-          <Button variant="outline" className="flex-1 lg:flex-none h-12 px-6 rounded-2xl border-2 font-bold gap-2 hover:bg-muted/50 transition-all">
-            <Download size={20} strokeWidth={2.5} /> Exporter CSV
+          <Link to={`/create/${event.id}`}>
+            <Button variant="outline" className="h-11 px-5 rounded-xl border-2 font-bold gap-2 hover:bg-muted/50 transition-all">
+              <Pencil size={18} strokeWidth={2.5} /> Modifier
+            </Button>
+          </Link>
+          <Button variant="outline" onClick={handleExportCalendar} className="flex-1 lg:flex-none h-11 px-5 rounded-xl border-2 font-bold gap-2 hover:bg-muted/50 transition-all">
+            <CalendarIcon size={18} strokeWidth={2.5} /> iCal
           </Button>
-          <Button className="flex-1 lg:flex-none h-12 px-8 rounded-2xl font-black gap-2 shadow-lg shadow-primary/20 hover:scale-105 transition-all">
-            <QrCode size={20} strokeWidth={2.5} /> Scanner QR
+          <Button variant="outline" className="flex-1 lg:flex-none h-11 px-5 rounded-xl border-2 font-bold gap-2 hover:bg-muted/50 transition-all">
+            <Download size={18} strokeWidth={2.5} /> CSV
+          </Button>
+          <Button onClick={handleDeleteEvent} variant="ghost" className="flex-1 lg:flex-none h-11 px-4 rounded-xl text-destructive hover:bg-destructive/10 transition-all">
+            <Trash2 size={18} strokeWidth={2.5} />
+          </Button>
+          <Button className="flex-1 lg:flex-none h-11 px-6 rounded-xl font-black gap-2 shadow-lg shadow-primary/20 hover:scale-105 transition-all">
+            <QrCode size={18} strokeWidth={2.5} /> Scanner
           </Button>
         </div>
       </div>
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="h-14 bg-muted/30 rounded-2xl p-1.5 border-2 border-transparent mb-8">
-          <TabsTrigger value="analytics" className="rounded-xl font-black uppercase text-[10px] tracking-widest px-8 data-[state=active]:bg-card data-[state=active]:shadow-md data-[state=active]:text-primary transition-all">Analytics de Vente</TabsTrigger>
-          <TabsTrigger value="attendees" className="rounded-xl font-black uppercase text-[10px] tracking-widest px-8 data-[state=active]:bg-card data-[state=active]:shadow-md data-[state=active]:text-primary transition-all">Participants ({attendees.length})</TabsTrigger>
-          <TabsTrigger value="settings" className="rounded-xl font-black uppercase text-[10px] tracking-widest px-8 data-[state=active]:bg-card data-[state=active]:shadow-md data-[state=active]:text-primary transition-all">Paramètres</TabsTrigger>
+        <TabsList className="h-12 bg-muted/30 rounded-xl p-1.5 border-none mb-8">
+          <TabsTrigger value="analytics" className="rounded-lg font-black uppercase text-[10px] tracking-widest px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all">Analytics</TabsTrigger>
+          <TabsTrigger value="attendees" className="rounded-lg font-black uppercase text-[10px] tracking-widest px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all">Participants ({attendees.length})</TabsTrigger>
+          <TabsTrigger value="gamification" className="rounded-lg font-black uppercase text-[10px] tracking-widest px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all">Gamification</TabsTrigger>
+          <TabsTrigger value="settings" className="rounded-lg font-black uppercase text-[10px] tracking-widest px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all">Config</TabsTrigger>
         </TabsList>
 
         <TabsContent value="analytics" className="space-y-8">
@@ -323,6 +380,30 @@ const EventDetails = () => {
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="gamification">
+          <Card className="border-none shadow-xl rounded-xl bg-card/80 backdrop-blur-md overflow-hidden">
+            <CardHeader className="p-8 pb-4">
+              <CardTitle className="text-xl font-black tracking-tight">Récompenses & Engagement</CardTitle>
+              <CardDescription className="text-sm font-medium">Visualisez l'impact de vos bonus de points.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-8 pt-4 space-y-8">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="p-6 rounded-xl bg-primary/5 border border-primary/10">
+                  <h4 className="text-sm font-black uppercase tracking-widest mb-4">Points Distribués</h4>
+                  <div className="text-3xl font-black text-primary">{attendees.length * 15} <span className="text-sm text-muted-foreground">pts</span></div>
+                  <p className="text-[10px] font-bold text-muted-foreground mt-2 italic">Estimation basée sur les check-ins confirmés.</p>
+                </div>
+                <div className="p-6 rounded-xl bg-muted/10 border border-transparent">
+                  <h4 className="text-sm font-black uppercase tracking-widest mb-4">Bonus Actifs</h4>
+                  <div className="flex gap-2">
+                    <Badge className="bg-primary/20 text-primary">Check-in Rapide (+5)</Badge>
+                    <Badge className="bg-primary/20 text-primary">VIP Member (+20)</Badge>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

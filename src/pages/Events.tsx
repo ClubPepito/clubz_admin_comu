@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useCommunity } from '../context/CommunityContext';
-import { 
-  Search, 
-  Filter, 
-  Plus, 
-  Calendar, 
-  MapPin, 
-  Users, 
-  MoreVertical, 
-  ExternalLink, 
+import {
+  Search,
+  Filter,
+  Plus,
+  Calendar,
+  MapPin,
+  Users,
+  MoreVertical,
+  ExternalLink,
   Clock,
   Loader2,
   Ticket,
-  ChevronRight
+  ChevronRight,
+  Trash2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { eventService } from '../services/api';
@@ -20,11 +21,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import toast from 'react-hot-toast';
 
@@ -47,11 +48,22 @@ const Events = () => {
     }
   };
 
+  const handleDeleteEvent = async (id: string) => {
+    if (!confirm('Voulez-vous vraiment supprimer cet événement ?')) return;
+    try {
+      await eventService.delete(id);
+      setEvents(events.filter(e => e.id !== id));
+      toast.success('Événement supprimé');
+    } catch (err) {
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
   useEffect(() => {
     fetchEvents();
   }, [selectedCommunityId]);
 
-  const filteredEvents = events.filter(e => 
+  const filteredEvents = events.filter(e =>
     e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     e.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -73,9 +85,9 @@ const Events = () => {
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:w-96">
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" strokeWidth={2.5} />
-          <Input 
-            placeholder="Rechercher un événement..." 
-            className="pl-12 h-11 bg-card/50 border-none shadow-sm rounded-xl font-bold" 
+          <Input
+            placeholder="Rechercher un événement..."
+            className="pl-12 h-11 bg-card/50 border-none shadow-sm rounded-xl font-bold"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -103,8 +115,8 @@ const Events = () => {
           <div className="space-y-2">
             <h3 className="text-2xl font-black">Aucun événement trouvé</h3>
             <p className="text-muted-foreground font-medium max-w-md mx-auto">
-              {searchTerm 
-                ? "Aucun événement ne correspond à votre recherche. Essayez d'autres termes." 
+              {searchTerm
+                ? "Aucun événement ne correspond à votre recherche. Essayez d'autres termes."
                 : "Vous n'avez pas encore créé d'événement pour cette communauté."}
             </p>
           </div>
@@ -119,10 +131,10 @@ const Events = () => {
           {filteredEvents.map((event) => (
             <Card key={event.id} className="group border-none shadow-lg bg-card/60 backdrop-blur-sm rounded-[2rem] overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
               <div className="relative h-48 overflow-hidden">
-                <img 
-                  src={event.coverImage || 'https://images.unsplash.com/photo-1574169208507-84376144848b?w=800&auto=format&fit=crop&q=60'} 
-                  alt={event.title} 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                <img
+                  src={event.coverImage || 'https://images.unsplash.com/photo-1574169208507-84376144848b?w=800&auto=format&fit=crop&q=60'}
+                  alt={event.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute top-4 left-4">
                   <Badge className="bg-background/80 backdrop-blur-md text-foreground border-none font-bold shadow-sm">
@@ -140,11 +152,14 @@ const Events = () => {
                       <DropdownMenuItem className="font-bold gap-2">
                         <ExternalLink size={16} /> Voir la page
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="font-bold gap-2">
-                        Modifier
+                      <DropdownMenuItem className="font-bold gap-2" asChild>
+                        <Link to={`/create/${event.id}`}>Modifier</Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="font-bold gap-2 text-destructive">
-                        Supprimer
+                      <DropdownMenuItem
+                        className="font-bold gap-2 text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteEvent(event.id)}
+                      >
+                        <Trash2 size={16} /> Supprimer
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

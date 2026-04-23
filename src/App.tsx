@@ -8,7 +8,9 @@ import {
   LogOut,
   Bell,
   Search,
-  Loader2
+  Loader2,
+  Settings,
+  ShieldAlert
 } from 'lucide-react';
 import {
   Select,
@@ -24,6 +26,8 @@ import EventDetails from './pages/EventDetails';
 import Events from './pages/Events';
 import Members from './pages/Members';
 import Analytics from './pages/Analytics';
+import CommunitySettings from './pages/CommunitySettings';
+import Moderation from './pages/Moderation';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CommunityProvider, useCommunity } from './context/CommunityContext';
@@ -103,6 +107,8 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
           <SidebarLink to="/events" icon={Calendar} label="Mes Événements" active={location.pathname.startsWith('/events')} />
           <SidebarLink to="/members" icon={Users} label="Membres" active={location.pathname === '/members'} />
           <SidebarLink to="/analytics" icon={BarChart3} label="Statistiques" active={location.pathname === '/analytics'} />
+          <SidebarLink to="/moderation" icon={ShieldAlert} label="Modération" active={location.pathname === '/moderation'} />
+          <SidebarLink to="/settings" icon={Settings} label="Paramètres" active={location.pathname === '/settings'} />
         </nav>
 
         <div className="mt-auto">
@@ -154,10 +160,13 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/create" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
+              <Route path="/create/:id" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
               <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
               <Route path="/events/:id" element={<ProtectedRoute><EventDetails /></ProtectedRoute>} />
               <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+              <Route path="/moderation" element={<ProtectedRoute><Moderation /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><CommunitySettings /></ProtectedRoute>} />
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

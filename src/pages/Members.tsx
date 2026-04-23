@@ -23,6 +23,12 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import toast from 'react-hot-toast';
 import { useCommunity } from '../context/CommunityContext';
 
@@ -48,6 +54,27 @@ const Members = () => {
 
     fetchMembers();
   }, [selectedCommunityId]);
+
+  const handleKickMember = async (memberId: string) => {
+    if (!confirm('Voulez-vous vraiment exclure ce membre ?')) return;
+    try {
+      await communityService.kickMember(selectedCommunityId, memberId);
+      setMembers(members.filter(m => m.id !== memberId));
+      toast.success('Membre exclu');
+    } catch (err) {
+      toast.error('Erreur lors de l\'exclusion');
+    }
+  };
+
+  const handleRoleChange = async (memberId: string, roleName: string) => {
+    try {
+      await communityService.updateMemberRole(selectedCommunityId, memberId, roleName);
+      setMembers(members.map(m => m.id === memberId ? { ...m, role: { ...m.role, name: roleName } } : m));
+      toast.success('Rôle mis à jour');
+    } catch (err) {
+      toast.error('Erreur lors du changement de rôle');
+    }
+  };
 
   const filteredMembers = members.filter(m => 
     m.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -175,13 +202,28 @@ const Members = () => {
                       </div>
                     </TableCell>
                     <TableCell className="text-right px-10">
-                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary">
-                          <ExternalLink size={18} strokeWidth={2.5} />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary">
-                          <MoreVertical size={18} strokeWidth={2.5} />
-                        </Button>
+                      <div className="flex justify-end gap-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary">
+                              <MoreVertical size={18} strokeWidth={2.5} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="rounded-xl border-none shadow-2xl">
+                            <DropdownMenuItem className="font-bold gap-2" onClick={() => handleRoleChange(m.id, 'admin')}>
+                              Promouvoir Admin
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="font-bold gap-2" onClick={() => handleRoleChange(m.id, 'moderator')}>
+                              Promouvoir Modérateur
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="font-bold gap-2" onClick={() => handleRoleChange(m.id, 'member')}>
+                              Rétrograder Membre
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="font-bold gap-2 text-destructive" onClick={() => handleKickMember(m.id)}>
+                              Exclure
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </TableCell>
                   </TableRow>
