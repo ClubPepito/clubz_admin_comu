@@ -56,7 +56,7 @@ export const eventService = {
   
   // Analytics & Activity
   getStats: (id: string) => api.get(`/events/${id}/analytics`),
-  getGlobalStats: (communityId?: string) => api.get('/events/stats/global', { params: { communityId } }),
+  getGlobalStats: (communityId?: string | null) => api.get('/events/stats/global', { params: { communityId } }),
   getGlobalHistory: (communityId?: string | null) => 
     api.get('/events/stats/history', { params: communityId ? { communityId } : {} }),
   getRecentActivity: (communityId?: string | null) => 
@@ -105,7 +105,7 @@ export const communityService = {
     
   // Widgets
   getWidgets: (communityId: string) => api.get(`/widget-library/community/${communityId}`),
-  toggleWidget: (communityId: string, widgetId: string, enabled: boolean) => 
+  toggleWidget: (widgetId: string, enabled: boolean) => 
     api.patch(`/widget-library/${widgetId}`, { enabled }),
 };
 

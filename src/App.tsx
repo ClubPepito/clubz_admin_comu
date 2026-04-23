@@ -6,8 +6,6 @@ import {
   Users,
   BarChart3,
   LogOut,
-  Bell,
-  Search,
   Loader2,
   Settings,
   ShieldAlert
@@ -17,7 +15,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
 } from "@/components/ui/select";
 import { Toaster } from 'react-hot-toast';
 import Dashboard from './pages/Dashboard';
@@ -32,7 +29,6 @@ import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CommunityProvider, useCommunity } from './context/CommunityContext';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 

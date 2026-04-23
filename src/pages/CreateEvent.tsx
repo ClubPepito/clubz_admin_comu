@@ -1,22 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCommunity } from '../context/CommunityContext';
-import { 
-  Sparkles, 
-  Ticket, 
-  Eye, 
-  ChevronRight, 
-  ChevronLeft, 
-  Plus, 
-  Trash2, 
-  Calendar as CalendarIcon, 
-  MapPin, 
-  Type, 
-  Globe, 
-  Lock, 
+import {
+  Sparkles,
+  Ticket,
+  Eye,
+  ChevronRight,
+  ChevronLeft,
+  Plus,
+  Trash2,
+  MapPin,
+  Globe,
+  Lock,
   Loader2,
-  EyeOff,
-  Image as ImageIcon,
   HelpCircle,
   Hash,
   Repeat,
@@ -29,25 +25,24 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
 const CreateEvent = () => {
   const navigate = useNavigate();
   const { id } = useParams(); // For edit mode
   const isEditMode = !!id;
-  
+
   const { selectedCommunityId, communities } = useCommunity();
   const [tab, setTab] = useState('general');
   const [loading, setLoading] = useState(false);
@@ -88,7 +83,7 @@ const CreateEvent = () => {
       const event = res.data;
       // Format dates for input datetime-local
       const format = (d: string) => d ? new Date(d).toISOString().slice(0, 16) : '';
-      
+
       setFormData({
         ...event,
         startDate: format(event.startDate),
@@ -110,7 +105,7 @@ const CreateEvent = () => {
       setLoading(true);
       const res = await eventService.autoGenerate(aiUrl);
       const data = res.data;
-      
+
       setFormData({
         ...formData,
         title: data.title || formData.title,
@@ -148,10 +143,10 @@ const CreateEvent = () => {
     let suggestedPrice = 10;
     if (tier.name.toLowerCase().includes('vip')) suggestedPrice = 50;
     if (tier.name.toLowerCase().includes('early')) suggestedPrice = 5;
-    
+
     const newTiers = [...formData.ticketTypes];
     newTiers[idx].price = suggestedPrice;
-    setFormData({...formData, ticketTypes: newTiers});
+    setFormData({ ...formData, ticketTypes: newTiers });
     toast.success(`Prix suggéré par l'IA: ${suggestedPrice}€`);
   };
 
@@ -174,7 +169,7 @@ const CreateEvent = () => {
   const handleSubmit = async () => {
     if (!formData.communityId) return toast.error('Choisissez une communauté');
     if (!formData.title) return toast.error('Donnez un titre');
-    
+
     try {
       setSubmitting(true);
       if (isEditMode) {
@@ -230,8 +225,8 @@ const CreateEvent = () => {
             </div>
           </CardHeader>
           <CardContent className="p-6 pt-0 flex gap-3">
-            <Input 
-              placeholder="Lien Shotgun, Resident Advisor, Instagram..." 
+            <Input
+              placeholder="Lien Shotgun, Resident Advisor, Instagram..."
               className="h-11 bg-background border-2 border-transparent focus-visible:border-primary/30 rounded-xl shadow-sm text-sm"
               value={aiUrl}
               onChange={(e) => setAiUrl(e.target.value)}
@@ -246,12 +241,7 @@ const CreateEvent = () => {
       {/* Timeline Stepper */}
       <div className="relative mb-10 px-4">
         <div className="absolute top-6 left-12 right-12 h-1 bg-muted/20 rounded-full" />
-        <div 
-          className="absolute top-6 left-12 h-1 bg-primary rounded-full transition-all duration-500 ease-in-out"
-          style={{ width: `${(currentStepIndex / (steps.length - 1)) * (100 - (24 / 5))} %` }} 
-          // Simplified width calculation for the line
-        />
-        <div 
+        <div
           className="absolute top-6 left-12 h-1 bg-primary rounded-full transition-all duration-500 ease-in-out"
           style={{ width: `${(currentStepIndex / (steps.length - 1)) * 90}%` }}
         />
@@ -260,7 +250,7 @@ const CreateEvent = () => {
           {steps.map((step, index) => {
             const isActive = tab === step.id;
             const isPast = currentStepIndex > index;
-            
+
             return (
               <button
                 key={step.id}
@@ -269,10 +259,10 @@ const CreateEvent = () => {
               >
                 <div className={cn(
                   "relative z-10 w-12 h-12 rounded-full flex items-center justify-center border-4 transition-all duration-500",
-                  isActive 
-                    ? "bg-background border-primary shadow-[0_0_20px_rgba(var(--primary),0.3)] scale-110" 
-                    : isPast 
-                      ? "bg-primary border-primary text-white" 
+                  isActive
+                    ? "bg-background border-primary shadow-[0_0_20px_rgba(var(--primary),0.3)] scale-110"
+                    : isPast
+                      ? "bg-primary border-primary text-white"
                       : "bg-background border-muted/30 text-muted-foreground hover:border-muted-foreground/50"
                 )}>
                   <step.icon className={cn("h-5 w-5", isActive ? "text-primary" : "")} strokeWidth={2.5} />
@@ -300,9 +290,9 @@ const CreateEvent = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Communauté Organisatrice</Label>
-                  <Select 
-                    value={formData.communityId} 
-                    onValueChange={(val) => setFormData({...formData, communityId: val})}
+                  <Select
+                    value={formData.communityId}
+                    onValueChange={(val: string | null) => setFormData({...formData, communityId: val || ''})}
                   >
                     <SelectTrigger size="lg" className="pl-10 relative">
                       <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={2.5} />
@@ -316,9 +306,9 @@ const CreateEvent = () => {
 
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Co-Organisateurs (Partenariats)</Label>
-                  <Select 
-                    onValueChange={(val) => {
-                      if (!formData.coHostIds.includes(val)) {
+                  <Select
+                    onValueChange={(val: string | null) => {
+                      if (val && !formData.coHostIds.includes(val)) {
                         setFormData({...formData, coHostIds: [...formData.coHostIds, val]});
                       }
                     }}
@@ -337,7 +327,7 @@ const CreateEvent = () => {
                     {formData.coHostIds.map(id => (
                       <Badge key={id} variant="secondary" className="font-bold text-[10px] pr-1">
                         {communities.find(c => c.id === id)?.name}
-                        <XCircle className="h-3 w-3 ml-1 cursor-pointer" onClick={() => setFormData({...formData, coHostIds: formData.coHostIds.filter(cid => cid !== id)})} />
+                        <XCircle className="h-3 w-3 ml-1 cursor-pointer" onClick={() => setFormData({ ...formData, coHostIds: formData.coHostIds.filter(cid => cid !== id) })} />
                       </Badge>
                     ))}
                   </div>
@@ -347,22 +337,22 @@ const CreateEvent = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Titre de l'événement</Label>
-                  <Input 
-                    placeholder="LA NUIT LIQUIDE" 
+                  <Input
+                    placeholder="LA NUIT LIQUIDE"
                     className="h-10 text-base font-bold"
                     value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Lien de partage personnalisé</Label>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-muted-foreground">clubz.app/</span>
-                    <Input 
-                      placeholder="ma-soiree" 
+                    <Input
+                      placeholder="ma-soiree"
                       className="h-10 text-sm font-bold"
                       value={formData.shortLink}
-                      onChange={(e) => setFormData({...formData, shortLink: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, shortLink: e.target.value })}
                     />
                   </div>
                 </div>
@@ -371,11 +361,11 @@ const CreateEvent = () => {
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Début</Label>
-                  <Input type="datetime-local" className="h-10 text-sm font-bold" value={formData.startDate} onChange={(e) => setFormData({...formData, startDate: e.target.value})} />
+                  <Input type="datetime-local" className="h-10 text-sm font-bold" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fin</Label>
-                  <Input type="datetime-local" className="h-10 text-sm font-bold" value={formData.endDate} onChange={(e) => setFormData({...formData, endDate: e.target.value})} />
+                  <Input type="datetime-local" className="h-10 text-sm font-bold" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} />
                 </div>
               </div>
 
@@ -383,17 +373,17 @@ const CreateEvent = () => {
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Lieu & Adresse</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Rechercher une adresse..." className="h-10 pl-10 text-sm font-bold" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} />
+                  <Input placeholder="Rechercher une adresse..." className="h-10 pl-10 text-sm font-bold" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Description Notion-Style</Label>
-                <textarea 
+                <textarea
                   className="w-full min-h-[150px] rounded-xl border-2 border-transparent bg-muted/20 px-4 py-3 text-sm font-bold placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary/30 transition-all resize-none"
                   placeholder="Décrivez l'expérience..."
                   value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
 
@@ -426,7 +416,7 @@ const CreateEvent = () => {
                       <Input className="h-10 bg-background border-none font-bold text-sm" value={tier.name} onChange={(e) => {
                         const newTiers = [...formData.ticketTypes];
                         newTiers[idx].name = e.target.value;
-                        setFormData({...formData, ticketTypes: newTiers});
+                        setFormData({ ...formData, ticketTypes: newTiers });
                       }} />
                     </div>
                     <div className="w-24 space-y-2">
@@ -434,7 +424,7 @@ const CreateEvent = () => {
                       <Input type="number" className="h-10 bg-background border-none font-black text-sm" value={tier.price} onChange={(e) => {
                         const newTiers = [...formData.ticketTypes];
                         newTiers[idx].price = Number(e.target.value);
-                        setFormData({...formData, ticketTypes: newTiers});
+                        setFormData({ ...formData, ticketTypes: newTiers });
                       }} />
                     </div>
                     <div className="w-20 space-y-2">
@@ -442,7 +432,7 @@ const CreateEvent = () => {
                       <Input type="number" className="h-10 bg-background border-none font-bold text-sm" value={tier.totalQuantity} onChange={(e) => {
                         const newTiers = [...formData.ticketTypes];
                         newTiers[idx].totalQuantity = Number(e.target.value);
-                        setFormData({...formData, ticketTypes: newTiers});
+                        setFormData({ ...formData, ticketTypes: newTiers });
                       }} />
                     </div>
                     <div className="flex gap-2">
@@ -456,7 +446,7 @@ const CreateEvent = () => {
                       <Input className="h-9 bg-background border-none text-xs" placeholder="Ce qui est inclus..." value={tier.description} onChange={(e) => {
                         const newTiers = [...formData.ticketTypes];
                         newTiers[idx].description = e.target.value;
-                        setFormData({...formData, ticketTypes: newTiers});
+                        setFormData({ ...formData, ticketTypes: newTiers });
                       }} />
                     </div>
                     <div className="space-y-1">
@@ -464,7 +454,7 @@ const CreateEvent = () => {
                       <Input type="datetime-local" className="h-9 bg-background border-none text-[10px]" value={tier.salesStartDate} onChange={(e) => {
                         const newTiers = [...formData.ticketTypes];
                         newTiers[idx].salesStartDate = e.target.value;
-                        setFormData({...formData, ticketTypes: newTiers});
+                        setFormData({ ...formData, ticketTypes: newTiers });
                       }} />
                     </div>
                     <div className="space-y-1">
@@ -472,7 +462,7 @@ const CreateEvent = () => {
                       <Input type="datetime-local" className="h-9 bg-background border-none text-[10px]" value={tier.salesEndDate} onChange={(e) => {
                         const newTiers = [...formData.ticketTypes];
                         newTiers[idx].salesEndDate = e.target.value;
-                        setFormData({...formData, ticketTypes: newTiers});
+                        setFormData({ ...formData, ticketTypes: newTiers });
                       }} />
                     </div>
                   </div>
@@ -510,7 +500,7 @@ const CreateEvent = () => {
                       <Input className="h-10 bg-background border-none font-bold text-sm" value={field.label} onChange={(e) => {
                         const newFields = [...formData.customFields];
                         newFields[idx].label = e.target.value;
-                        setFormData({...formData, customFields: newFields});
+                        setFormData({ ...formData, customFields: newFields });
                       }} />
                     </div>
                     <div className="w-32 space-y-2">
@@ -518,7 +508,7 @@ const CreateEvent = () => {
                       <Select value={field.type} onValueChange={(val) => {
                         const newFields = [...formData.customFields];
                         newFields[idx].type = val;
-                        setFormData({...formData, customFields: newFields});
+                        setFormData({ ...formData, customFields: newFields });
                       }}>
                         <SelectTrigger className="h-10 bg-background border-none font-bold text-xs">
                           <SelectValue />
@@ -534,10 +524,10 @@ const CreateEvent = () => {
                     <Button variant="ghost" size="icon" onClick={() => removeCustomField(idx)} className="h-10 w-10 text-destructive rounded-lg"><Trash2 size={16} /></Button>
                   </div>
                 )
-              ))}
-              
+                ))}
+
               <Separator className="my-8" />
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Options Avancées</Label>
@@ -549,10 +539,10 @@ const CreateEvent = () => {
                         <p className="text-[10px] text-muted-foreground font-medium">Répéter automatiquement.</p>
                       </div>
                     </div>
-                    <Button 
-                      variant={formData.isRecurring ? "default" : "outline"} 
-                      size="sm" 
-                      onClick={() => setFormData({...formData, isRecurring: !formData.isRecurring})}
+                    <Button
+                      variant={formData.isRecurring ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, isRecurring: !formData.isRecurring })}
                       className="h-8 rounded-lg text-[10px] font-black uppercase"
                     >
                       {formData.isRecurring ? "Activé" : "Désactivé"}
@@ -567,10 +557,10 @@ const CreateEvent = () => {
                         <p className="text-[10px] text-muted-foreground font-medium">Lien de stream ou visio.</p>
                       </div>
                     </div>
-                    <Button 
-                      variant={formData.isOnline ? "default" : "outline"} 
-                      size="sm" 
-                      onClick={() => setFormData({...formData, isOnline: !formData.isOnline})}
+                    <Button
+                      variant={formData.isOnline ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, isOnline: !formData.isOnline })}
                       className="h-8 rounded-lg text-[10px] font-black uppercase"
                     >
                       {formData.isOnline ? "Activé" : "Désactivé"}
@@ -583,20 +573,20 @@ const CreateEvent = () => {
                   <div className="flex flex-wrap gap-2 mb-2">
                     {(formData.tags || []).map(tag => (
                       <Badge key={tag} className="bg-primary/10 text-primary border-none font-bold px-3 py-1 flex items-center gap-1.5">
-                        {tag} <XCircle className="h-3 w-3 cursor-pointer" onClick={() => setFormData({...formData, tags: (formData.tags || []).filter(t => t !== tag)})} />
+                        {tag} <XCircle className="h-3 w-3 cursor-pointer" onClick={() => setFormData({ ...formData, tags: (formData.tags || []).filter(t => t !== tag) })} />
                       </Badge>
                     ))}
                   </div>
                   <div className="relative">
                     <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="Ajouter un tag (Entrée)..." 
+                    <Input
+                      placeholder="Ajouter un tag (Entrée)..."
                       className="h-10 pl-10 text-sm font-bold rounded-xl"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           const val = (e.target as HTMLInputElement).value.trim();
                           if (val && !formData.tags.includes(val)) {
-                            setFormData({...formData, tags: [...formData.tags, val]});
+                            setFormData({ ...formData, tags: [...formData.tags, val] });
                             (e.target as HTMLInputElement).value = '';
                           }
                         }
@@ -622,12 +612,12 @@ const CreateEvent = () => {
             </CardHeader>
             <CardContent className="p-8 pt-6 space-y-10">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div 
+                <div
                   className={cn(
                     "group relative p-6 rounded-2xl border-4 cursor-pointer transition-all duration-300",
                     formData.visibility === 'public' ? "border-primary bg-primary/5 shadow-xl scale-[1.02]" : "border-muted/30 hover:border-muted"
                   )}
-                  onClick={() => setFormData({...formData, visibility: 'public'})}
+                  onClick={() => setFormData({ ...formData, visibility: 'public' })}
                 >
                   <div className={cn(
                     "h-12 w-12 rounded-xl mb-4 flex items-center justify-center transition-all",
@@ -639,12 +629,12 @@ const CreateEvent = () => {
                   <p className="text-xs font-medium text-muted-foreground">Visible par tous sur la carte Clubz.</p>
                 </div>
 
-                <div 
+                <div
                   className={cn(
                     "group relative p-6 rounded-2xl border-4 cursor-pointer transition-all duration-300",
                     formData.visibility === 'community_only' ? "border-primary bg-primary/5 shadow-xl scale-[1.02]" : "border-muted/30 hover:border-muted"
                   )}
-                  onClick={() => setFormData({...formData, visibility: 'community_only'})}
+                  onClick={() => setFormData({ ...formData, visibility: 'community_only' })}
                 >
                   <div className={cn(
                     "h-12 w-12 rounded-xl mb-4 flex items-center justify-center transition-all",
@@ -659,9 +649,9 @@ const CreateEvent = () => {
 
               <div className="flex justify-between items-center pt-6">
                 <Button variant="ghost" onClick={() => setTab('form')} className="h-10 px-6 font-bold gap-2"><ChevronLeft size={18} /> Retour</Button>
-                <Button 
-                  onClick={handleSubmit} 
-                  disabled={submitting} 
+                <Button
+                  onClick={handleSubmit}
+                  disabled={submitting}
                   className="h-11 px-10 rounded-xl font-black gap-2 shadow-xl shadow-primary/20 hover:scale-105 transition-all"
                 >
                   {submitting ? <Loader2 className="animate-spin h-5 w-5" /> : (isEditMode ? <CheckCircle2 size={20} /> : <Plus size={20} />)}

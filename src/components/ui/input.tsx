@@ -3,7 +3,11 @@ import { Input as InputPrimitive } from "@base-ui/react/input"
 
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, size = "default", ...props }: React.ComponentProps<"input"> & { size?: "default" | "lg" }) {
+interface InputProps extends Omit<React.ComponentProps<"input">, "size"> {
+  size?: "default" | "lg";
+}
+
+function Input({ className, type, size = "default", ...props }: InputProps) {
   return (
     <InputPrimitive
       type={type}

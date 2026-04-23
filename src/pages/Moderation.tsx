@@ -33,6 +33,7 @@ const Moderation = () => {
   }, [selectedCommunityId]);
 
   const fetchData = async () => {
+    if (!selectedCommunityId) return;
     try {
       setLoading(true);
       const [postsRes, channelsRes] = await Promise.all([

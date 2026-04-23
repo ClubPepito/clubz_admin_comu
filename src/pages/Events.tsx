@@ -6,7 +6,6 @@ import {
   Plus,
   Calendar,
   MapPin,
-  Users,
   MoreVertical,
   ExternalLink,
   Clock,
@@ -17,7 +16,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { eventService } from '../services/api';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -143,7 +142,7 @@ const Events = () => {
                 </div>
                 <div className="absolute top-4 right-4">
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                    <DropdownMenuTrigger>
                       <Button size="icon" variant="secondary" className="h-9 w-9 rounded-xl bg-background/80 backdrop-blur-md border-none shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
                         <MoreVertical size={18} />
                       </Button>
@@ -152,7 +151,7 @@ const Events = () => {
                       <DropdownMenuItem className="font-bold gap-2">
                         <ExternalLink size={16} /> Voir la page
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="font-bold gap-2" asChild>
+                      <DropdownMenuItem className="font-bold gap-2">
                         <Link to={`/create/${event.id}`}>Modifier</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem

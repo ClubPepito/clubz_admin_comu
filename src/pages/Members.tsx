@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Mail, 
-  Calendar,
+  Search,
+  Filter,
+  Mail,
+  MoreVertical,
   ShieldCheck,
   Loader2,
-  ExternalLink
+  Calendar,
 } from 'lucide-react';
 import { communityService } from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -40,6 +39,7 @@ const Members = () => {
 
   useEffect(() => {
     const fetchMembers = async () => {
+      if (!selectedCommunityId) return;
       try {
         setLoading(true);
         const res = await communityService.getMembers(selectedCommunityId);
@@ -58,6 +58,7 @@ const Members = () => {
   const handleKickMember = async (memberId: string) => {
     if (!confirm('Voulez-vous vraiment exclure ce membre ?')) return;
     try {
+      if (!selectedCommunityId) return;
       await communityService.kickMember(selectedCommunityId, memberId);
       setMembers(members.filter(m => m.id !== memberId));
       toast.success('Membre exclu');
@@ -68,6 +69,7 @@ const Members = () => {
 
   const handleRoleChange = async (memberId: string, roleName: string) => {
     try {
+      if (!selectedCommunityId) return;
       await communityService.updateMemberRole(selectedCommunityId, memberId, roleName);
       setMembers(members.map(m => m.id === memberId ? { ...m, role: { ...m.role, name: roleName } } : m));
       toast.success('Rôle mis à jour');
@@ -204,7 +206,7 @@ const Members = () => {
                     <TableCell className="text-right px-10">
                       <div className="flex justify-end gap-2">
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                          <DropdownMenuTrigger>
                             <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary">
                               <MoreVertical size={18} strokeWidth={2.5} />
                             </Button>
