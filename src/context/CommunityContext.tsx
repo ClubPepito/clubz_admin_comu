@@ -7,6 +7,8 @@ interface Community {
   name: string;
   description?: string;
   coverImage?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 interface CommunityContextType {
@@ -39,13 +41,6 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const res = await communityService.getAll();
       const fetchedCommunities = res.data || [];
       setCommunities(fetchedCommunities);
-      
-      // If no community is selected, or the selected one doesn't exist anymore
-      if (fetchedCommunities.length > 0) {
-        if (!selectedCommunityId || !fetchedCommunities.find((c: any) => c.id === selectedCommunityId)) {
-          // Don't auto-select to allow "All" view by default
-        }
-      }
     } catch (err) {
       console.error('Failed to fetch communities', err);
     } finally {
@@ -66,6 +61,18 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [selectedCommunityId]);
 
   const selectedCommunity = communities.find(c => c.id === selectedCommunityId) || null;
+
+  // Apply community theme
+  useEffect(() => {
+    if (selectedCommunity?.primaryColor) {
+      document.documentElement.style.setProperty('--primary', selectedCommunity.primaryColor);
+      // Generate a subtle hover/alpha variant if needed
+      // document.documentElement.style.setProperty('--primary-hover', selectedCommunity.primaryColor + 'ee');
+    } else {
+      // Default Clubz Blue
+      document.documentElement.style.setProperty('--primary', '#2A7B9B');
+    }
+  }, [selectedCommunity]);
 
   return (
     <CommunityContext.Provider value={{ 
