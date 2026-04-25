@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
-  TrendingUp, 
   ArrowLeft, 
-  Download, 
   Search,
-  Clock,
   QrCode,
   MoreVertical,
   Filter,
@@ -16,7 +13,6 @@ import {
   Pencil,
   Trash2
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { 
   XAxis, 
   YAxis, 
@@ -26,7 +22,7 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -62,18 +58,11 @@ const EventDetails = () => {
           eventService.getStats(id).catch(() => ({ data: null })),
           eventService.getAttendees(id).catch(() => ({ data: [] }))
         ]);
-        
         setEvent(eventRes.data);
         setAnalytics(analyticsRes.data);
         setAttendees(attendeesRes.data || []);
-      } catch (err) {
-        console.error('Failed to fetch event details', err);
-        toast.error('Erreur lors du chargement de l\'événement');
-      } finally {
-        setLoading(false);
-      }
+      } catch (err) { toast.error('Erreur chargement'); } finally { setLoading(false); }
     };
-
     fetchData();
   }, [id]);
 
@@ -83,13 +72,8 @@ const EventDetails = () => {
     try {
       await eventService.checkIn(id, ticketId);
       toast.success('Check-in réussi !');
-      // Update local state
       setAttendees(attendees.map(a => a.id === ticketId ? { ...a, checkedIn: true } : a));
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erreur lors du check-in');
-    } finally {
-      setCheckingIn(null);
-    }
+    } catch (err: any) { toast.error('Erreur check-in'); } finally { setCheckingIn(null); }
   };
 
   const handleExportCalendar = async () => {
@@ -103,196 +87,109 @@ const EventDetails = () => {
       link.setAttribute('download', `${event.title}.ics`);
       document.body.appendChild(link);
       link.click();
-      toast.success('Calendrier exporté !');
-    } catch (err) {
-      toast.error('Erreur lors de l\'export');
-    }
+      toast.success('Exporté !');
+    } catch (err) { toast.error('Erreur export'); }
   };
 
   const handleDeleteEvent = async () => {
     if (!id || !confirm('Voulez-vous vraiment supprimer cet événement ?')) return;
     try {
       await eventService.delete(id);
-      toast.success('Événement supprimé');
+      toast.success('Supprimé');
       navigate('/events');
-    } catch (err) {
-      toast.error('Erreur lors de la suppression');
-    }
+    } catch (err) { toast.error('Erreur'); }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Initialisation de la console...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!event) {
-    return (
-      <div className="text-center py-20">
-        <h2 className="text-2xl font-black">Événement introuvable</h2>
-        <Link to="/" className="text-primary hover:underline mt-4 inline-block">Retour au Dashboard</Link>
-      </div>
-    );
-  }
+  if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 size={32} className="animate-spin text-primary opacity-40" /></div>;
+  if (!event) return <div className="text-center py-20"><h2 className="text-lg font-bold">Introuvable</h2><Link to="/" className="text-primary text-xs font-bold mt-2 inline-block">Retour</Link></div>;
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <Link to="/" className="group inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-all">
-        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" strokeWidth={2.5} /> Retour au Dashboard
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
+      <Link to="/events" className="inline-flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground hover:text-primary transition-all uppercase tracking-wider">
+        <ArrowLeft size={14} /> Retour
       </Link>
 
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-        <div className="flex items-center gap-6">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <div className="flex items-center gap-4">
           <div className="relative">
-            <Avatar className="h-24 w-24 rounded-[2rem] border-4 border-card shadow-2xl">
-              <AvatarImage src={event.coverImage || 'https://images.unsplash.com/photo-1574169208507-84376144848b?w=800&auto=format&fit=crop&q=60'} className="object-cover" />
+            <Avatar className="h-16 w-16 rounded-2xl border border-gray-100 shadow-sm">
+              <AvatarImage src={event.image} className="object-cover" />
               <AvatarFallback>EV</AvatarFallback>
             </Avatar>
-            <div className="absolute -bottom-2 -right-2 h-8 w-8 bg-success rounded-xl border-4 border-card flex items-center justify-center shadow-lg">
-              <CheckCircle2 size={16} className="text-white" strokeWidth={3} />
+            <div className="absolute -bottom-1.5 -right-1.5 h-6 w-6 bg-success rounded-lg border-2 border-white flex items-center justify-center shadow-sm">
+              <CheckCircle2 size={12} className="text-white" />
             </div>
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <h2 className="text-4xl font-black tracking-tighter">{event.title}</h2>
-              <Badge 
-                variant="secondary" 
-                className={cn(
-                  "font-black uppercase text-[10px] tracking-widest px-3 py-1",
-                  event.status === 'published' ? "bg-success/10 text-success border-success/20" :
-                  event.status === 'draft' ? "bg-warning/10 text-warning border-warning/20" :
-                  event.status === 'cancelled' ? "bg-destructive/10 text-destructive border-destructive/20" :
-                  "bg-muted text-muted-foreground border-muted-foreground/20"
-                )}
-              >
-                {event.status === 'published' ? 'PUBLIÉ' :
-                 event.status === 'draft' ? 'BROUILLON' :
-                 event.status === 'cancelled' ? 'ANNULÉ' : 'TERMINÉ'}
-              </Badge>
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold tracking-tight">{event.title}</h2>
+              <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-widest bg-success/5 text-success border-success/10 px-1.5 py-0">PUBLIÉ</Badge>
             </div>
-            <div className="flex flex-wrap items-center gap-5 text-sm font-bold text-muted-foreground uppercase tracking-tight">
-              <span className="flex items-center gap-2"><CalendarIcon size={16} className="text-primary" strokeWidth={2.5} /> {new Date(event.startDate).toLocaleDateString()}</span>
-              <span className="flex items-center gap-2"><Clock size={16} className="text-primary" strokeWidth={2.5} /> {new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-              <span className="flex items-center gap-2"><MapPin size={16} className="text-primary" strokeWidth={2.5} /> {event.location}</span>
+            <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-muted-foreground uppercase tracking-tight opacity-70">
+              <span className="flex items-center gap-1.5"><CalendarIcon size={12} className="text-primary" /> {new Date(event.startDate).toLocaleDateString()}</span>
+              <span className="flex items-center gap-1.5"><MapPin size={12} className="text-primary" /> {event.location}</span>
             </div>
           </div>
         </div>
-        <div className="flex gap-3 w-full lg:w-auto">
+        <div className="flex gap-2 w-full lg:w-auto">
           <Link to={`/create/${event.id}`}>
-            <Button variant="outline" className="h-11 px-5 rounded-xl border-2 font-bold gap-2 hover:bg-muted/50 transition-all">
-              <Pencil size={18} strokeWidth={2.5} /> Modifier
-            </Button>
+            <Button variant="outline" size="sm" className="h-9 px-3 rounded-xl border-gray-100 bg-white font-bold gap-2 text-[10px] uppercase tracking-wider"><Pencil size={14} /> Éditer</Button>
           </Link>
-          <Button variant="outline" onClick={handleExportCalendar} className="flex-1 lg:flex-none h-11 px-5 rounded-xl border-2 font-bold gap-2 hover:bg-muted/50 transition-all">
-            <CalendarIcon size={18} strokeWidth={2.5} /> iCal
-          </Button>
-          <Button variant="outline" className="flex-1 lg:flex-none h-11 px-5 rounded-xl border-2 font-bold gap-2 hover:bg-muted/50 transition-all">
-            <Download size={18} strokeWidth={2.5} /> CSV
-          </Button>
-          <Button onClick={handleDeleteEvent} variant="ghost" className="flex-1 lg:flex-none h-11 px-4 rounded-xl text-destructive hover:bg-destructive/10 transition-all">
-            <Trash2 size={18} strokeWidth={2.5} />
-          </Button>
-          <Button className="flex-1 lg:flex-none h-11 px-6 rounded-xl font-black gap-2 shadow-lg shadow-primary/20 hover:scale-105 transition-all">
-            <QrCode size={18} strokeWidth={2.5} /> Scanner
-          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportCalendar} className="h-9 px-3 rounded-xl border-gray-100 bg-white font-bold gap-2 text-[10px] uppercase tracking-wider"><CalendarIcon size={14} /> iCal</Button>
+          <Button onClick={handleDeleteEvent} variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/5"><Trash2 size={14} /></Button>
+          <Button size="sm" className="h-9 px-4 rounded-xl font-bold gap-2 shadow-md shadow-primary/10 text-[10px] uppercase tracking-wider"><QrCode size={14} /> Scanner</Button>
         </div>
       </div>
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="h-12 bg-muted/30 rounded-xl p-1.5 border-none mb-8">
-          <TabsTrigger value="analytics" className="rounded-lg font-black uppercase text-[10px] tracking-widest px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all">Analytics</TabsTrigger>
-          <TabsTrigger value="attendees" className="rounded-lg font-black uppercase text-[10px] tracking-widest px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all">Participants ({attendees.length})</TabsTrigger>
-          <TabsTrigger value="gamification" className="rounded-lg font-black uppercase text-[10px] tracking-widest px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all">Gamification</TabsTrigger>
-          <TabsTrigger value="settings" className="rounded-lg font-black uppercase text-[10px] tracking-widest px-6 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all">Config</TabsTrigger>
+        <TabsList className="h-10 bg-gray-100/50 rounded-lg p-1 border border-gray-200/50 mb-6 w-fit">
+          <TabsTrigger value="analytics" className="rounded-md font-bold px-5 text-[10px] uppercase tracking-tight h-full data-[state=active]:bg-white data-[state=active]:text-[#247596] data-[state=active]:shadow-sm transition-all duration-200">Analytics</TabsTrigger>
+          <TabsTrigger value="attendees" className="rounded-md font-bold px-5 text-[10px] uppercase tracking-tight h-full data-[state=active]:bg-white data-[state=active]:text-[#247596] data-[state=active]:shadow-sm transition-all duration-200">Invités ({attendees.length})</TabsTrigger>
+          <TabsTrigger value="gamification" className="rounded-md font-bold px-5 text-[10px] uppercase tracking-tight h-full data-[state=active]:bg-white data-[state=active]:text-[#247596] data-[state=active]:shadow-sm transition-all duration-200">Gamification</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="analytics" className="space-y-8">
-          <div className="grid gap-6 md:grid-cols-3">
-            <Card className="border-none shadow-xl bg-card/60 backdrop-blur-sm rounded-[2rem] overflow-hidden group">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Revenu Total</CardTitle>
+        <TabsContent value="analytics" className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card className="border-none shadow-sm bg-white rounded-xl border border-gray-50">
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Revenu</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-4xl font-black tracking-tighter group-hover:text-primary transition-colors">{analytics?.totalRevenue?.toLocaleString() || '0'} €</div>
-                <div className="mt-3 flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-success/10 text-success text-[10px] font-bold">+24%</Badge>
-                  <span className="text-[10px] font-black uppercase text-muted-foreground opacity-60 italic">vs prévision</span>
-                </div>
-              </CardContent>
-              <div className="h-1.5 w-full bg-success/10" />
-            </Card>
-            
-            <Card className="border-none shadow-xl bg-card/60 backdrop-blur-sm rounded-[2rem] overflow-hidden group">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Check-ins Actifs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-4xl font-black tracking-tighter">{analytics?.checkInCount || 0} <span className="text-xl text-muted-foreground font-medium">/ {event.capacity || 0}</span></div>
-                <div className="mt-5 h-2 w-full bg-muted/50 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary shadow-[0_0_10px_rgba(42,123,155,0.4)]" 
-                    style={{ width: `${Math.min(100, ((analytics?.checkInCount || 0) / (event.capacity || 1)) * 100)}%` }} 
-                  />
-                </div>
+              <CardContent className="p-4 pt-0">
+                <div className="text-xl font-black tracking-tighter">{analytics?.totalRevenue?.toLocaleString() || '0'} €</div>
+                <Badge variant="outline" className="mt-2 bg-success/5 text-success border-success/10 text-[8px] font-bold">+24%</Badge>
               </CardContent>
             </Card>
-
-            <Card className="border-none shadow-xl bg-card/60 backdrop-blur-sm rounded-[2rem] overflow-hidden group">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Waitlist</CardTitle>
+            <Card className="border-none shadow-sm bg-white rounded-xl border border-gray-50">
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Check-ins</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-4xl font-black tracking-tighter text-warning">{analytics?.waitlistCount || 0}</div>
-                <p className="mt-3 text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1.5">
-                  <TrendingUp size={12} className="text-warning" /> Moyenne: 3 promos / jour
-                </p>
+              <CardContent className="p-4 pt-0">
+                <div className="text-xl font-black tracking-tighter">{analytics?.checkInCount || 0} <span className="text-xs text-muted-foreground font-medium">/ {event.capacity || 0}</span></div>
+                <div className="mt-3 h-1 w-full bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-primary" style={{ width: `${Math.min(100, ((analytics?.checkInCount || 0) / (event.capacity || 1)) * 100)}%` }} /></div>
               </CardContent>
-              <div className="h-1.5 w-full bg-warning/10" />
+            </Card>
+            <Card className="border-none shadow-sm bg-white rounded-xl border border-gray-50">
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Waitlist</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <div className="text-xl font-black tracking-tighter text-warning">{analytics?.waitlistCount || 0}</div>
+                <p className="text-[9px] font-bold text-muted-foreground mt-1 uppercase tracking-tight opacity-50 italic">Demande forte</p>
+              </CardContent>
             </Card>
           </div>
 
-          <Card className="border-none shadow-2xl rounded-[2.5rem] bg-card/80 backdrop-blur-md overflow-hidden">
-            <CardHeader className="p-10 pb-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-2xl font-black tracking-tight">Flux de Trésorerie Live</CardTitle>
-                  <CardDescription className="text-base font-medium italic">Ventes de billets agrégées sur la semaine.</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50 border border-muted/50 text-[10px] font-black uppercase tracking-tighter">
-                    <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_rgba(42,123,155,0.6)]" /> Ventes (€)
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-10 pt-6 h-[400px]">
+          <Card className="border-none shadow-sm rounded-2xl bg-white border border-gray-50">
+            <CardHeader className="p-5 pb-2"><CardTitle className="text-sm font-bold">Ventes Live</CardTitle></CardHeader>
+            <CardContent className="p-5 pt-0 h-[280px] mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={analytics?.salesHistory || []}>
-                  <defs>
-                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2A7B9B" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#2A7B9B" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(0,0,0,0.03)" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#9CA3AF', fontWeight: 'bold'}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#9CA3AF', fontWeight: 'bold'}} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      borderRadius: '1.5rem', 
-                      border: 'none', 
-                      boxShadow: '0 15px 40px rgba(0,0,0,0.1)',
-                      padding: '1rem 1.5rem',
-                      background: 'rgba(255,255,255,0.95)'
-                    }}
-                    itemStyle={{ color: '#2A7B9B', fontWeight: '900', fontSize: '14px' }}
-                  />
-                  <Area type="monotone" dataKey="sales" stroke="#2A7B9B" strokeWidth={4} fillOpacity={1} fill="url(#colorSales)" />
+                  <defs><linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#247596" stopOpacity={0.2}/><stop offset="95%" stopColor="#247596" stopOpacity={0}/></linearGradient></defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 9, fill: '#9CA3AF', fontWeight: 'bold'}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 9, fill: '#9CA3AF', fontWeight: 'bold'}} />
+                  <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.08)', background: '#fff', fontSize: '10px' }} />
+                  <Area type="monotone" dataKey="sales" stroke="#247596" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
@@ -300,110 +197,44 @@ const EventDetails = () => {
         </TabsContent>
 
         <TabsContent value="attendees">
-          <Card className="border-none shadow-2xl rounded-[2.5rem] bg-card/80 backdrop-blur-md overflow-hidden">
-            <CardHeader className="p-10 pb-6 flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl font-black tracking-tight">Liste des Invités</CardTitle>
-                <CardDescription className="text-base font-medium">Gérez les accès et les statuts en temps réel.</CardDescription>
+          <Card className="border-none shadow-sm rounded-2xl bg-white border border-gray-50 overflow-hidden">
+            <CardHeader className="p-5 pb-4 flex flex-row items-center justify-between gap-4">
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
+                <Input placeholder="Rechercher..." className="pl-9 h-9 w-48 sm:w-64 bg-white border-gray-100 shadow-sm rounded-lg font-medium text-[11px]" />
               </div>
-              <div className="flex gap-3">
-                <div className="relative">
-                  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" strokeWidth={2.5} />
-                  <Input placeholder="Nom, email, code..." className="pl-12 h-11 w-80 bg-background border-none shadow-sm rounded-xl font-bold text-sm" />
-                </div>
-                <Button variant="outline" className="h-11 rounded-xl border-2 font-bold gap-2 hover:bg-muted/50">
-                  <Filter size={18} strokeWidth={2.5} /> Filtrer
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" className="h-9 rounded-lg border-gray-100 font-bold gap-2 text-[10px] uppercase tracking-wider"><Filter size={14} /> Filtre</Button>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader className="bg-muted/30">
-                  <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="px-10 h-14 text-[10px] font-black uppercase tracking-widest">Membre</TableHead>
-                    <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Type de Billet</TableHead>
-                    <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Statut</TableHead>
-                    <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest text-center">Check-in</TableHead>
-                    <TableHead className="px-10 h-14"></TableHead>
+                <TableHeader className="bg-gray-50/50">
+                  <TableRow className="hover:bg-transparent border-gray-50">
+                    <TableHead className="px-5 h-10 text-[9px] font-black uppercase tracking-widest opacity-50">Participant</TableHead>
+                    <TableHead className="h-10 text-[9px] font-black uppercase tracking-widest opacity-50">Billet</TableHead>
+                    <TableHead className="h-10 text-[9px] font-black uppercase tracking-widest opacity-50 text-center">Check-in</TableHead>
+                    <TableHead className="px-5 h-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {attendees.map((a) => (
-                    <TableRow key={a.id} className="group hover:bg-primary/[0.01] transition-colors border-muted/30">
-                      <TableCell className="px-10 py-6">
-                        <div className="flex items-center gap-4">
-                          <Avatar className="h-12 w-12 rounded-2xl border-2 border-transparent group-hover:border-primary/20 transition-all shadow-sm">
-                            <AvatarFallback className="bg-primary/5 text-primary font-black text-xs">{(a.user?.name || a.name || 'U').substring(0, 2).toUpperCase()}</AvatarFallback>
+                    <TableRow key={a.id} className="group hover:bg-gray-50/50 transition-colors border-gray-50">
+                      <TableCell className="px-5 py-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8 rounded-lg border border-gray-100 shadow-sm shrink-0">
+                            <AvatarFallback className="bg-primary/5 text-primary font-bold text-[10px]">{(a.user?.name || 'U').substring(0, 2).toUpperCase()}</AvatarFallback>
                           </Avatar>
-                          <div className="space-y-1">
-                            <p className="text-base font-black leading-none group-hover:text-primary transition-colors">{a.user?.name || a.name || 'Utilisateur'}</p>
-                            <p className="text-xs text-muted-foreground font-bold italic opacity-60">{a.user?.email || a.email}</p>
-                          </div>
+                          <div className="min-w-0"><p className="text-[12px] font-bold leading-tight truncate">{a.user?.name || 'Utilisateur'}</p><p className="text-[9px] text-muted-foreground opacity-60 truncate">{a.user?.email}</p></div>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="rounded-lg bg-primary/5 text-primary border-primary/20 font-black uppercase text-[9px] px-3 py-1">
-                          {a.ticketType?.name || a.ticket || 'Standard'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className={`h-2 w-2 rounded-full shadow-[0_0_8px] ${a.status === 'going' ? 'bg-success shadow-success/40' : 'bg-warning shadow-warning/40'}`} />
-                          <span className={`text-xs font-black uppercase tracking-tighter ${a.status === 'going' ? 'text-success' : 'text-warning'}`}>
-                            {a.status === 'going' ? 'Confirmé' : 'Waitlist'}
-                          </span>
-                        </div>
-                      </TableCell>
+                      <TableCell><Badge variant="outline" className="rounded-md bg-gray-50 text-foreground border-gray-100 font-bold uppercase text-[8px] px-1.5 py-0">{a.ticketType?.name || 'Standard'}</Badge></TableCell>
                       <TableCell className="text-center">
-                        {a.checkedIn ? (
-                          <div className="inline-flex items-center justify-center h-10 w-10 rounded-2xl bg-success/10 text-success shadow-inner">
-                            <CheckCircle2 size={22} strokeWidth={2.5} />
-                          </div>
-                        ) : (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            disabled={checkingIn === a.id}
-                            onClick={() => handleCheckIn(a.id)}
-                            className="h-10 w-10 rounded-2xl bg-muted/50 text-muted-foreground hover:bg-primary hover:text-white transition-all"
-                          >
-                            {checkingIn === a.id ? <Loader2 className="animate-spin h-5 w-5" /> : <QrCode size={20} strokeWidth={2.5} />}
-                          </Button>
-                        )}
+                        {a.checkedIn ? <CheckCircle2 size={18} className="text-success mx-auto" /> : <Button variant="ghost" size="icon" disabled={checkingIn === a.id} onClick={() => handleCheckIn(a.id)} className="h-7 w-7 rounded-lg hover:bg-gray-100 text-gray-300 hover:text-primary transition-all">{checkingIn === a.id ? <Loader2 className="animate-spin h-3 w-3" /> : <QrCode size={14} />}</Button>}
                       </TableCell>
-                      <TableCell className="text-right px-10">
-                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-primary/10 hover:text-primary">
-                          <MoreVertical size={20} strokeWidth={2.5} />
-                        </Button>
-                      </TableCell>
+                      <TableCell className="text-right px-5"><Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 transition-all"><MoreVertical size={14} /></Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="gamification">
-          <Card className="border-none shadow-xl rounded-xl bg-card/80 backdrop-blur-md overflow-hidden">
-            <CardHeader className="p-8 pb-4">
-              <CardTitle className="text-xl font-black tracking-tight">Récompenses & Engagement</CardTitle>
-              <CardDescription className="text-sm font-medium">Visualisez l'impact de vos bonus de points.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 pt-4 space-y-8">
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="p-6 rounded-xl bg-primary/5 border border-primary/10">
-                  <h4 className="text-sm font-black uppercase tracking-widest mb-4">Points Distribués</h4>
-                  <div className="text-3xl font-black text-primary">{attendees.length * 15} <span className="text-sm text-muted-foreground">pts</span></div>
-                  <p className="text-[10px] font-bold text-muted-foreground mt-2 italic">Estimation basée sur les check-ins confirmés.</p>
-                </div>
-                <div className="p-6 rounded-xl bg-muted/10 border border-transparent">
-                  <h4 className="text-sm font-black uppercase tracking-widest mb-4">Bonus Actifs</h4>
-                  <div className="flex gap-2">
-                    <Badge className="bg-primary/20 text-primary">Check-in Rapide (+5)</Badge>
-                    <Badge className="bg-primary/20 text-primary">VIP Member (+20)</Badge>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>

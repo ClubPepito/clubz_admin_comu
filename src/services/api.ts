@@ -125,4 +125,19 @@ export const roomService = {
   getMembers: (id: string) => api.get(`/rooms/${id}/members`),
 };
 
+export const chatService = {
+  getByRoom: (roomId: string, params?: any) => api.get(`/chats/room/${roomId}`, { params }),
+  delete: (id: string) => api.delete(`/chats/${id}`),
+};
+
+export const storageService = {
+  upload: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/storage/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+};
+
 export default api;

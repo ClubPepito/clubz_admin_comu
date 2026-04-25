@@ -5,8 +5,6 @@ import {
   Sparkles,
   Ticket,
   Eye,
-  ChevronRight,
-  ChevronLeft,
   Plus,
   Trash2,
   MapPin,
@@ -14,19 +12,17 @@ import {
   Lock,
   Loader2,
   HelpCircle,
-  Hash,
-  Repeat,
-  CheckCircle2,
-  Users,
-  XCircle
+  Image as ImageIcon,
+  X
 } from 'lucide-react';
-import { eventService } from '../services/api';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { eventService, communityService, storageService } from '../services/api';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import {
@@ -36,11 +32,10 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 
 const CreateEvent = () => {
   const navigate = useNavigate();
-  const { id } = useParams(); // For edit mode
+  const { id } = useParams();
   const isEditMode = !!id;
 
   const { selectedCommunityId, communities } = useCommunity();
@@ -61,19 +56,42 @@ const CreateEvent = () => {
     isRecurring: false,
     recurrenceRule: '',
     isOnline: false,
+    meetingLink: '',
     shortLink: '',
     tags: [] as string[],
     coHostIds: [] as string[],
+    latitude: null as number | null,
+    longitude: null as number | null,
     ticketTypes: [
       { name: 'Regular', price: 0, totalQuantity: 100, order: 0, isHidden: false, points: 10, description: '', salesStartDate: '', salesEndDate: '' }
     ],
     customFields: [] as any[]
   });
 
+  const [addressSearch, setAddressSearch] = useState('');
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+
   useEffect(() => {
-    if (isEditMode) {
-      fetchEvent();
-    }
+    const delayDebounceFn = setTimeout(() => {
+      if (addressSearch.length > 2 && addressSearch !== formData.location) {
+        handleAddressSearch();
+      } else {
+        setAddressSuggestions([]);
+      }
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [addressSearch]);
+
+  const handleAddressSearch = async () => {
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressSearch)}&limit=5&addressdetails=1`);
+      const data = await response.json();
+      setAddressSuggestions(data);
+    } catch (err) { console.error('Address search failed', err); }
+  };
+
+  useEffect(() => {
+    if (isEditMode) fetchEvent();
   }, [id]);
 
   const fetchEvent = async () => {
@@ -81,9 +99,7 @@ const CreateEvent = () => {
       setLoading(true);
       const res = await eventService.getOne(id!);
       const event = res.data;
-      // Format dates for input datetime-local
       const format = (d: string) => d ? new Date(d).toISOString().slice(0, 16) : '';
-
       setFormData({
         ...event,
         startDate: format(event.startDate),
@@ -92,11 +108,8 @@ const CreateEvent = () => {
         customFields: event.customFields || [],
         coHostIds: event.coHosts?.map((c: any) => c.id) || []
       });
-    } catch (err) {
-      toast.error('Erreur lors du chargement de l\'événement');
-    } finally {
-      setLoading(false);
-    }
+      setAddressSearch(event.location || '');
+    } catch (err) { toast.error('Erreur chargement'); } finally { setLoading(false); }
   };
 
   const handleAiGenerate = async () => {
@@ -105,7 +118,6 @@ const CreateEvent = () => {
       setLoading(true);
       const res = await eventService.autoGenerate(aiUrl);
       const data = res.data;
-
       setFormData({
         ...formData,
         title: data.title || formData.title,
@@ -114,22 +126,12 @@ const CreateEvent = () => {
         image: data.image || formData.image,
         ticketTypes: data.ticketTypes?.length > 0 ? data.ticketTypes : formData.ticketTypes
       });
-      toast.success('Données générées par l\'IA !');
-    } catch (err) {
-      toast.error('L\'IA n\'a pas pu extraire les données.');
-    } finally {
-      setLoading(false);
-    }
+      toast.success('Généré par l\'IA !');
+    } catch (err) { toast.error('Erreur IA'); } finally { setLoading(false); }
   };
 
   const addTicketType = () => {
-    setFormData({
-      ...formData,
-      ticketTypes: [
-        ...formData.ticketTypes,
-        { name: 'Nouveau Tier', price: 0, totalQuantity: 50, order: formData.ticketTypes.length, isHidden: false, points: 10, description: '', salesStartDate: '', salesEndDate: '' }
-      ]
-    });
+    setFormData({ ...formData, ticketTypes: [...formData.ticketTypes, { name: 'Tier', price: 0, totalQuantity: 50, order: formData.ticketTypes.length, isHidden: false, points: 10, description: '', salesStartDate: '', salesEndDate: '' }] });
   };
 
   const removeTicketType = (index: number) => {
@@ -138,26 +140,8 @@ const CreateEvent = () => {
     setFormData({ ...formData, ticketTypes: newTiers });
   };
 
-  const handleYieldSuggest = (idx: number) => {
-    const tier = formData.ticketTypes[idx];
-    let suggestedPrice = 10;
-    if (tier.name.toLowerCase().includes('vip')) suggestedPrice = 50;
-    if (tier.name.toLowerCase().includes('early')) suggestedPrice = 5;
-
-    const newTiers = [...formData.ticketTypes];
-    newTiers[idx].price = suggestedPrice;
-    setFormData({ ...formData, ticketTypes: newTiers });
-    toast.success(`Prix suggéré par l'IA: ${suggestedPrice}€`);
-  };
-
   const addCustomField = () => {
-    setFormData({
-      ...formData,
-      customFields: [
-        ...formData.customFields,
-        { label: 'Nouvelle Question', type: 'text', isRequired: false, options: [] }
-      ]
-    });
+    setFormData({ ...formData, customFields: [...formData.customFields, { label: 'Question', type: 'text', isRequired: false, options: [] }] });
   };
 
   const removeCustomField = (index: number) => {
@@ -167,112 +151,82 @@ const CreateEvent = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.communityId) return toast.error('Choisissez une communauté');
-    if (!formData.title) return toast.error('Donnez un titre');
-
+    if (!formData.communityId || !formData.title || !formData.startDate) {
+      return toast.error('Infos manquantes (Titre, Communauté, Date)');
+    }
     try {
       setSubmitting(true);
-      if (isEditMode) {
-        await eventService.update(id!, formData);
-        toast.success('Événement mis à jour !');
-      } else {
-        await eventService.create(formData);
-        toast.success('Événement publié avec succès !');
-      }
+      
+      // Clean up ticket types to send null for empty dates
+      const cleanedData = {
+        ...formData,
+        startDate: formData.startDate || null,
+        endDate: formData.endDate || null,
+        ticketTypes: formData.ticketTypes.map(tier => ({
+          ...tier,
+          salesStartDate: tier.salesStartDate || null,
+          salesEndDate: tier.salesEndDate || null
+        }))
+      };
+
+      if (isEditMode) await eventService.update(id!, cleanedData);
+      else await eventService.create(cleanedData);
+      
+      toast.success('Publié !');
       navigate('/events');
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erreur lors de la sauvegarde');
-    } finally {
-      setSubmitting(false);
+    } catch (err: any) { 
+      console.error('Submit failed', err);
+      toast.error('Erreur lors de la publication'); 
+    } finally { 
+      setSubmitting(false); 
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 size={40} className="animate-spin text-primary" />
-      </div>
-    );
-  }
+  if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 size={32} className="animate-spin text-primary opacity-40" /></div>;
 
   const steps = [
     { id: 'general', label: 'Infos', icon: Sparkles },
     { id: 'tickets', label: 'Billets', icon: Ticket },
-    { id: 'form', label: 'Formulaire', icon: HelpCircle },
+    { id: 'form', label: 'Form', icon: HelpCircle },
     { id: 'visibility', label: 'Publier', icon: Eye }
   ];
-
   const currentStepIndex = steps.findIndex(s => s.id === tab);
 
   return (
-    <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="space-y-1">
-        <h2 className="text-3xl font-black tracking-tight">{isEditMode ? 'Modifier l\'événement' : 'Créer un événement'}</h2>
-        <p className="text-sm text-muted-foreground font-medium">Contrôlez chaque détail de votre expérience Clubz.</p>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
+      <div className="space-y-0.5">
+        <h2 className="text-2xl font-bold tracking-tight">{isEditMode ? 'Modifier' : 'Créer'} un événement</h2>
+        <p className="text-xs text-muted-foreground font-medium">Configurez votre expérience.</p>
       </div>
 
       {!isEditMode && (
-        <Card className="border-2 border-primary/20 bg-primary/[0.03] rounded-xl overflow-hidden shadow-xl shadow-primary/5">
-          <CardHeader className="p-6 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-1.5 rounded-lg bg-primary text-white shadow-lg shadow-primary/20">
-                <Sparkles className="h-5 w-5" strokeWidth={2.5} />
-              </div>
-              <div>
-                <CardTitle className="text-lg font-black">Assistant IA Magic</CardTitle>
-                <CardDescription className="text-xs font-medium">L'IA pré-remplit le formulaire à partir d'un lien.</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6 pt-0 flex gap-3">
-            <Input
-              placeholder="Lien Shotgun, Resident Advisor, Instagram..."
-              className="h-11 bg-background border-2 border-transparent focus-visible:border-primary/30 rounded-xl shadow-sm text-sm"
-              value={aiUrl}
-              onChange={(e) => setAiUrl(e.target.value)}
-            />
-            <Button onClick={handleAiGenerate} disabled={loading} className="h-11 px-6 rounded-xl font-black gap-2 shrink-0">
-              {loading ? <Loader2 className="animate-spin h-4 w-4" /> : 'Générer'}
-            </Button>
+        <Card className="border border-primary/20 bg-primary/[0.02] rounded-xl overflow-hidden shadow-sm">
+          <CardContent className="p-4 flex gap-3 items-center">
+            <div className="p-2 rounded-lg bg-primary text-white shrink-0"><Sparkles size={16} /></div>
+            <Input placeholder="Lien IA Magic (Shotgun, Instagram...)" className="h-9 text-xs" value={aiUrl} onChange={(e) => setAiUrl(e.target.value)} />
+            <Button onClick={handleAiGenerate} size="sm" className="h-9 px-4 font-bold text-[10px] uppercase tracking-wider">Générer</Button>
           </CardContent>
         </Card>
       )}
 
-      {/* Timeline Stepper */}
-      <div className="relative mb-10 px-4">
-        <div className="absolute top-6 left-12 right-12 h-1 bg-muted/20 rounded-full" />
-        <div
-          className="absolute top-6 left-12 h-1 bg-primary rounded-full transition-all duration-500 ease-in-out"
-          style={{ width: `${(currentStepIndex / (steps.length - 1)) * 90}%` }}
-        />
-
+      {/* Stepper */}
+      <div className="relative mb-8 px-6">
+        <div className="absolute top-[18px] left-[42px] right-[42px] h-0.5 bg-gray-100 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-primary transition-all duration-500 ease-in-out" 
+            style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }} 
+          />
+        </div>
         <div className="relative flex justify-between">
           {steps.map((step, index) => {
             const isActive = tab === step.id;
             const isPast = currentStepIndex > index;
-
             return (
-              <button
-                key={step.id}
-                onClick={() => setTab(step.id)}
-                className="flex flex-col items-center gap-3 group transition-all"
-              >
-                <div className={cn(
-                  "relative z-10 w-12 h-12 rounded-full flex items-center justify-center border-4 transition-all duration-500",
-                  isActive
-                    ? "bg-background border-primary shadow-[0_0_20px_rgba(var(--primary),0.3)] scale-110"
-                    : isPast
-                      ? "bg-primary border-primary text-white"
-                      : "bg-background border-muted/30 text-muted-foreground hover:border-muted-foreground/50"
-                )}>
-                  <step.icon className={cn("h-5 w-5", isActive ? "text-primary" : "")} strokeWidth={2.5} />
+              <button key={step.id} onClick={() => setTab(step.id)} className="flex flex-col items-center gap-2 group">
+                <div className={cn("relative z-10 w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all", isActive ? "bg-white border-primary shadow-sm scale-110" : isPast ? "bg-primary border-primary text-white" : "bg-white border-gray-100 text-gray-300")}>
+                  <step.icon size={16} className={cn(isActive && "text-primary")} />
                 </div>
-                <span className={cn(
-                  "text-[9px] font-black uppercase tracking-widest transition-colors duration-300",
-                  isActive ? "text-primary" : "text-muted-foreground"
-                )}>
-                  {step.label}
-                </span>
+                <span className={cn("text-[8px] font-black uppercase tracking-widest", isActive ? "text-primary" : "text-gray-400")}>{step.label}</span>
               </button>
             );
           })}
@@ -281,383 +235,294 @@ const CreateEvent = () => {
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsContent value="general">
-          <Card className="border-none shadow-xl rounded-xl bg-card/80 backdrop-blur-md">
-            <CardHeader className="p-8 pb-4">
-              <CardTitle className="text-xl font-black tracking-tight">Informations de Base</CardTitle>
-              <CardDescription className="text-sm font-medium">Les détails essentiels que tout le monde verra.</CardDescription>
+          <Card className="border-none shadow-sm rounded-2xl bg-white border border-gray-50">
+            <CardHeader className="p-5 pb-2">
+              <CardTitle className="text-sm font-bold">Informations de Base</CardTitle>
             </CardHeader>
-            <CardContent className="p-8 pt-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Communauté Organisatrice</Label>
-                  <Select
-                    value={formData.communityId}
-                    onValueChange={(val: string | null) => setFormData({...formData, communityId: val || ''})}
-                  >
-                    <SelectTrigger size="lg" className="pl-10 relative">
-                      <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={2.5} />
-                      <span>{communities.find(c => c.id === formData.communityId)?.name || "Choisir..."}</span>
+            <CardContent className="p-5 pt-4 space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Communauté</Label>
+                  <Select value={formData.communityId} onValueChange={(val: string | null) => setFormData({...formData, communityId: val || ''})}>
+                    <SelectTrigger className="h-9 text-xs">
+                      {communities.find(c => c.id === formData.communityId)?.name || "Choisir..."}
                     </SelectTrigger>
-                    <SelectContent>
-                      {communities.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
+                    <SelectContent>{communities.map((c) => <SelectItem key={c.id} value={c.id} className="text-xs">{c.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Co-Organisateurs (Partenariats)</Label>
-                  <Select
-                    onValueChange={(val: string | null) => {
-                      if (val && !formData.coHostIds.includes(val)) {
-                        setFormData({...formData, coHostIds: [...formData.coHostIds, val]});
-                      }
-                    }}
-                  >
-                    <SelectTrigger size="lg" className="pl-10 relative">
-                      <Plus className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" strokeWidth={2.5} />
-                      <span>{(formData.coHostIds || []).length > 0 ? `${formData.coHostIds.length} partenaire(s)` : "Ajouter un co-hôte..."}</span>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {communities.filter(c => c.id !== formData.communityId).map((c) => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {formData.coHostIds.map(id => (
-                      <Badge key={id} variant="secondary" className="font-bold text-[10px] pr-1">
-                        {communities.find(c => c.id === id)?.name}
-                        <XCircle className="h-3 w-3 ml-1 cursor-pointer" onClick={() => setFormData({ ...formData, coHostIds: formData.coHostIds.filter(cid => cid !== id) })} />
-                      </Badge>
-                    ))}
-                  </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Titre</Label>
+                  <Input placeholder="Nom de l'événement" className="h-9 text-xs font-bold" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Titre de l'événement</Label>
-                  <Input
-                    placeholder="LA NUIT LIQUIDE"
-                    className="h-10 text-base font-bold"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Début</Label>
+                  <Input type="datetime-local" className="h-9 text-xs" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Fin</Label>
+                  <Input type="datetime-local" className="h-9 text-xs" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} />
+                </div>
+              </div>
+              <div className="space-y-1.5 relative">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Lieu</Label>
+                <div className="relative">
+                  <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
+                  <Input 
+                    placeholder="Rechercher une adresse réelle..." 
+                    className="h-9 pl-9 text-xs" 
+                    value={addressSearch || formData.location} 
+                    onChange={(e) => {
+                      setAddressSearch(e.target.value);
+                      if (!e.target.value) setFormData({ ...formData, location: '', latitude: null, longitude: null });
+                    }} 
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Lien de partage personnalisé</Label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-muted-foreground">clubz.app/</span>
-                    <Input
-                      placeholder="ma-soiree"
-                      className="h-10 text-sm font-bold"
-                      value={formData.shortLink}
-                      onChange={(e) => setFormData({ ...formData, shortLink: e.target.value })}
-                    />
+                {addressSuggestions.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    {addressSuggestions.map((suggestion, idx) => (
+                      <button
+                        key={idx}
+                        className="w-full text-left px-4 py-2.5 text-[10px] font-medium hover:bg-primary/5 transition-colors border-b border-gray-50 last:border-none flex items-start gap-3"
+                        onClick={() => {
+                          setFormData({ 
+                            ...formData, 
+                            location: suggestion.display_name,
+                            latitude: parseFloat(suggestion.lat),
+                            longitude: parseFloat(suggestion.lon)
+                          });
+                          setAddressSearch(suggestion.display_name);
+                          setAddressSuggestions([]);
+                          toast.success('Adresse géolocalisée !', { duration: 1500 });
+                        }}
+                      >
+                        <MapPin size={12} className="mt-0.5 text-primary shrink-0" />
+                        <span className="truncate">{suggestion.display_name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Description</Label>
+                <textarea className="w-full min-h-[80px] rounded-lg border border-gray-100 bg-gray-50/30 px-3 py-2 text-xs font-medium focus:ring-1 focus:ring-primary/20 outline-none resize-none" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Image de l'événement</Label>
+                  <div className="flex gap-4 items-start">
+                    {formData.image ? (
+                      <div className="relative w-24 h-24 rounded-xl overflow-hidden group">
+                        <img src={formData.image} className="w-full h-full object-cover" />
+                        <button onClick={() => setFormData({...formData, image: ''})} className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Trash2 size={16} /></button>
+                      </div>
+                    ) : (
+                      <label className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-100 bg-gray-50/30 flex flex-col items-center justify-center cursor-pointer hover:border-primary/20 hover:bg-primary/[0.02] transition-all group">
+                        <ImageIcon size={20} className="text-gray-300 group-hover:text-primary/40 transition-colors" />
+                        <span className="text-[8px] font-black uppercase tracking-widest text-gray-400 mt-2">Upload</span>
+                        <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            try {
+                              const res = await storageService.upload(file);
+                              setFormData({ ...formData, image: res.data.url });
+                              toast.success('Image ajoutée');
+                            } catch (err) { toast.error('Erreur upload'); }
+                          }
+                        }} />
+                      </label>
+                    )}
+                    <div className="flex-1 space-y-1.5">
+                      <Label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Tags</Label>
+                      <Input 
+                        placeholder="Sport, Musique, Networking... (séparés par des virgules)" 
+                        className="h-8 text-[10px]" 
+                        value={formData.tags.join(', ')} 
+                        onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })} 
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Co-organisateurs</Label>
+                  <div className="p-3 rounded-xl border border-gray-100 bg-gray-50/30 min-h-[96px] space-y-2">
+                    <div className="flex flex-wrap gap-1.5">
+                      {formData.coHostIds.length > 0 ? (
+                        formData.coHostIds.map(id => (
+                          <Badge key={id} variant="secondary" className="bg-white border-gray-100 text-[9px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 group">
+                            {id.slice(0, 8)}...
+                            <X size={10} className="cursor-pointer hover:text-destructive" onClick={() => setFormData({...formData, coHostIds: formData.coHostIds.filter(cid => cid !== id)})} />
+                          </Badge>
+                        ))
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground opacity-60 italic">Aucun co-organisateur sélectionné</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Début</Label>
-                  <Input type="datetime-local" className="h-10 text-sm font-bold" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fin</Label>
-                  <Input type="datetime-local" className="h-10 text-sm font-bold" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Lieu & Adresse</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Rechercher une adresse..." className="h-10 pl-10 text-sm font-bold" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Description Notion-Style</Label>
-                <textarea
-                  className="w-full min-h-[150px] rounded-xl border-2 border-transparent bg-muted/20 px-4 py-3 text-sm font-bold placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary/30 transition-all resize-none"
-                  placeholder="Décrivez l'expérience..."
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-
-              <div className="flex justify-end">
-                <Button onClick={() => setTab('tickets')} className="h-10 px-8 rounded-xl font-black gap-2">
-                  Suivant <ChevronRight size={18} />
-                </Button>
-              </div>
+              <div className="flex justify-end pt-2"><Button onClick={() => setTab('tickets')} size="sm" className="h-9 px-8 font-bold text-[10px] uppercase tracking-wider shadow-md shadow-primary/5">Suivant</Button></div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="tickets" className="space-y-6">
-          <Card className="border-none shadow-xl rounded-xl bg-card/80 backdrop-blur-md">
-            <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-xl font-black tracking-tight">Types de Billets</CardTitle>
-                <CardDescription className="text-sm font-medium">Gérez vos catégories et vos quotas.</CardDescription>
-              </div>
-              <Button variant="outline" size="sm" onClick={addTicketType} className="h-9 px-4 rounded-lg font-bold gap-2">
-                <Plus size={16} /> Ajouter
-              </Button>
+          <Card className="border-none shadow-sm rounded-2xl bg-white border border-gray-50">
+            <CardHeader className="p-5 pb-0 flex justify-between items-center flex-row">
+              <CardTitle className="text-sm font-bold">Billetterie</CardTitle>
+              <Button variant="outline" size="sm" onClick={addTicketType} className="h-7 px-3 text-[9px] font-bold uppercase tracking-wider"><Plus size={12} className="mr-1" /> Ajouter un tier</Button>
             </CardHeader>
-            <CardContent className="p-8 pt-4 space-y-4">
-              {(formData.ticketTypes || []).map((tier, idx) => (
-                <div key={idx} className="p-2 rounded-xl bg-muted/10 border-2 border-transparent hover:border-primary/10 transition-all space-y-4">
-                  <div className="flex gap-4 items-end px-2 pt-2">
-                    <div className="flex-1 space-y-2">
-                      <Label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Nom</Label>
-                      <Input className="h-10 bg-background border-none font-bold text-sm" value={tier.name} onChange={(e) => {
-                        const newTiers = [...formData.ticketTypes];
-                        newTiers[idx].name = e.target.value;
-                        setFormData({ ...formData, ticketTypes: newTiers });
-                      }} />
+            <CardContent className="p-5 pt-4 space-y-4">
+              <div className="grid grid-cols-12 gap-3 px-3 mb-1">
+                <div className="col-span-5 text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Nom du billet</div>
+                <div className="col-span-3 text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Prix (€)</div>
+                <div className="col-span-3 text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Quantité</div>
+                <div className="col-span-1"></div>
+              </div>
+              
+              <div className="space-y-3">
+                {formData.ticketTypes.map((tier, idx) => (
+                  <div key={idx} className="p-3 rounded-xl bg-gray-50/40 border border-gray-100/50 space-y-3 transition-all hover:bg-gray-50/80">
+                    <div className="grid grid-cols-12 gap-3 items-center">
+                      <div className="col-span-5">
+                        <Input className="h-8 text-xs font-bold bg-white" placeholder="ex: Regular" value={tier.name} onChange={(e) => { const n = [...formData.ticketTypes]; n[idx].name = e.target.value; setFormData({ ...formData, ticketTypes: n }); }} />
+                      </div>
+                      <div className="col-span-3">
+                        <Input type="number" className="h-8 text-xs font-bold bg-white" placeholder="0" value={tier.price} onChange={(e) => { const n = [...formData.ticketTypes]; n[idx].price = Number(e.target.value); setFormData({ ...formData, ticketTypes: n }); }} />
+                      </div>
+                      <div className="col-span-3">
+                        <Input type="number" className="h-8 text-xs font-bold bg-white" placeholder="100" value={tier.totalQuantity} onChange={(e) => { const n = [...formData.ticketTypes]; n[idx].totalQuantity = Number(e.target.value); setFormData({ ...formData, ticketTypes: n }); }} />
+                      </div>
+                      <div className="col-span-1 flex justify-end">
+                        <Button variant="ghost" size="icon" onClick={() => removeTicketType(idx)} className="h-7 w-7 text-destructive hover:bg-destructive/5"><Trash2 size={14} /></Button>
+                      </div>
                     </div>
-                    <div className="w-24 space-y-2">
-                      <Label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Prix (€)</Label>
-                      <Input type="number" className="h-10 bg-background border-none font-black text-sm" value={tier.price} onChange={(e) => {
-                        const newTiers = [...formData.ticketTypes];
-                        newTiers[idx].price = Number(e.target.value);
-                        setFormData({ ...formData, ticketTypes: newTiers });
-                      }} />
-                    </div>
-                    <div className="w-20 space-y-2">
-                      <Label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Stock</Label>
-                      <Input type="number" className="h-10 bg-background border-none font-bold text-sm" value={tier.totalQuantity} onChange={(e) => {
-                        const newTiers = [...formData.ticketTypes];
-                        newTiers[idx].totalQuantity = Number(e.target.value);
-                        setFormData({ ...formData, ticketTypes: newTiers });
-                      }} />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleYieldSuggest(idx)} className="h-10 w-10 text-primary bg-primary/5 rounded-lg"><Sparkles size={16} /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => removeTicketType(idx)} className="h-10 w-10 text-destructive rounded-lg"><Trash2 size={16} /></Button>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 pb-4">
-                    <div className="space-y-1">
-                      <Label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Description du billet</Label>
-                      <Input className="h-9 bg-background border-none text-xs" placeholder="Ce qui est inclus..." value={tier.description} onChange={(e) => {
-                        const newTiers = [...formData.ticketTypes];
-                        newTiers[idx].description = e.target.value;
-                        setFormData({ ...formData, ticketTypes: newTiers });
-                      }} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Début des ventes</Label>
-                      <Input type="datetime-local" className="h-9 bg-background border-none text-[10px]" value={tier.salesStartDate} onChange={(e) => {
-                        const newTiers = [...formData.ticketTypes];
-                        newTiers[idx].salesStartDate = e.target.value;
-                        setFormData({ ...formData, ticketTypes: newTiers });
-                      }} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Fin des ventes</Label>
-                      <Input type="datetime-local" className="h-9 bg-background border-none text-[10px]" value={tier.salesEndDate} onChange={(e) => {
-                        const newTiers = [...formData.ticketTypes];
-                        newTiers[idx].salesEndDate = e.target.value;
-                        setFormData({ ...formData, ticketTypes: newTiers });
-                      }} />
+                    
+                    <div className="grid grid-cols-3 gap-3 pt-1">
+                      <div className="space-y-1">
+                        <Label className="text-[7px] font-black uppercase tracking-widest text-muted-foreground opacity-70 ml-1">Description (optionnel)</Label>
+                        <Input className="h-7 text-[10px] bg-white/50 border-gray-100" placeholder="Ce qui est inclus..." value={tier.description || ''} onChange={(e) => { const n = [...formData.ticketTypes]; n[idx].description = e.target.value; setFormData({ ...formData, ticketTypes: n }); }} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[7px] font-black uppercase tracking-widest text-muted-foreground opacity-70 ml-1">Début des ventes</Label>
+                        <Input type="datetime-local" className="h-7 text-[9px] bg-white/50 border-gray-100" value={tier.salesStartDate || ''} onChange={(e) => { const n = [...formData.ticketTypes]; n[idx].salesStartDate = e.target.value; setFormData({ ...formData, ticketTypes: n }); }} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[7px] font-black uppercase tracking-widest text-muted-foreground opacity-70 ml-1">Fin des ventes</Label>
+                        <Input type="datetime-local" className="h-7 text-[9px] bg-white/50 border-gray-100" value={tier.salesEndDate || ''} onChange={(e) => { const n = [...formData.ticketTypes]; n[idx].salesEndDate = e.target.value; setFormData({ ...formData, ticketTypes: n }); }} />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              <div className="flex justify-between pt-6">
-                <Button variant="ghost" onClick={() => setTab('general')} className="h-10 px-6 font-bold gap-2"><ChevronLeft size={18} /> Retour</Button>
-                <Button onClick={() => setTab('form')} className="h-10 px-8 rounded-xl font-black gap-2">Suivant <ChevronRight size={18} /></Button>
+                ))}
+              </div>
+              
+              <div className="flex justify-between pt-4">
+                <Button variant="ghost" onClick={() => setTab('general')} className="h-9 text-[10px] uppercase font-bold tracking-wider">Retour</Button>
+                <Button onClick={() => setTab('form')} size="sm" className="h-9 px-8 font-bold text-[10px] uppercase tracking-wider shadow-md shadow-primary/5">Suivant</Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="form" className="space-y-6">
-          <Card className="border-none shadow-xl rounded-xl bg-card/80 backdrop-blur-md">
-            <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-xl font-black tracking-tight">Questions Participants</CardTitle>
-                <CardDescription className="text-sm font-medium">Collectez les données cruciales lors de l'inscription.</CardDescription>
-              </div>
-              <Button variant="outline" size="sm" onClick={addCustomField} className="h-9 px-4 rounded-lg font-bold gap-2">
-                <Plus size={16} /> Nouvelle Question
-              </Button>
+          <Card className="border-none shadow-sm rounded-2xl bg-white border border-gray-50">
+            <CardHeader className="p-5 pb-2 flex justify-between items-center flex-row">
+              <CardTitle className="text-sm font-bold">Questions</CardTitle>
+              <Button variant="outline" size="sm" onClick={addCustomField} className="h-7 px-3 text-[9px] font-bold uppercase"><Plus size={12} className="mr-1" /> Ajouter</Button>
             </CardHeader>
-            <CardContent className="p-8 pt-4 space-y-4">
-              {(formData.customFields || []).length === 0 ? (
-                <div className="text-center py-12 border-2 border-dashed border-muted-foreground/20 rounded-xl">
-                  <p className="text-sm font-bold text-muted-foreground">Aucune question personnalisée.</p>
-                </div>
-              ) : (
-                (formData.customFields || []).map((field, idx) => (
-                  <div key={idx} className="flex gap-4 items-end p-4 rounded-xl bg-muted/10 border-2 border-transparent hover:border-primary/10 transition-all">
-                    <div className="flex-1 space-y-2">
-                      <Label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Intitulé de la question</Label>
-                      <Input className="h-10 bg-background border-none font-bold text-sm" value={field.label} onChange={(e) => {
-                        const newFields = [...formData.customFields];
-                        newFields[idx].label = e.target.value;
-                        setFormData({ ...formData, customFields: newFields });
-                      }} />
-                    </div>
-                    <div className="w-32 space-y-2">
-                      <Label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Type</Label>
-                      <Select value={field.type} onValueChange={(val) => {
-                        const newFields = [...formData.customFields];
-                        newFields[idx].type = val;
-                        setFormData({ ...formData, customFields: newFields });
-                      }}>
-                        <SelectTrigger className="h-10 bg-background border-none font-bold text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="text">Texte</SelectItem>
-                          <SelectItem value="number">Nombre</SelectItem>
-                          <SelectItem value="select">Liste</SelectItem>
-                          <SelectItem value="checkbox">Case à cocher</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => removeCustomField(idx)} className="h-10 w-10 text-destructive rounded-lg"><Trash2 size={16} /></Button>
+            <CardContent className="p-5 pt-4 space-y-4">
+              <div className="grid grid-cols-12 gap-3 px-1 mb-1">
+                <div className="col-span-11 text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Question</div>
+                <div className="col-span-1"></div>
+              </div>
+              
+              <div className="space-y-2">
+                {formData.customFields.map((field, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <Input className="h-9 text-xs font-medium bg-gray-50/50 border-gray-100" placeholder="ex: Quelle est votre pointure ?" value={field.label} onChange={(e) => { const n = [...formData.customFields]; n[idx].label = e.target.value; setFormData({ ...formData, customFields: n }); }} />
+                    <Button variant="ghost" size="icon" onClick={() => removeCustomField(idx)} className="h-9 w-9 text-destructive hover:bg-destructive/5"><Trash2 size={14} /></Button>
                   </div>
-                )
                 ))}
-
-              <Separator className="my-8" />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Options Avancées</Label>
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-muted/5 border border-transparent hover:border-muted-foreground/10 transition-all">
-                    <div className="flex items-center gap-3">
-                      <Repeat className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-sm font-bold">Événement Récurrent</p>
-                        <p className="text-[10px] text-muted-foreground font-medium">Répéter automatiquement.</p>
-                      </div>
-                    </div>
-                    <Button
-                      variant={formData.isRecurring ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setFormData({ ...formData, isRecurring: !formData.isRecurring })}
-                      className="h-8 rounded-lg text-[10px] font-black uppercase"
-                    >
-                      {formData.isRecurring ? "Activé" : "Désactivé"}
-                    </Button>
+                {formData.customFields.length === 0 && (
+                  <div className="text-center py-6 border-2 border-dashed border-gray-50 rounded-xl">
+                    <p className="text-[10px] text-muted-foreground opacity-60">Aucune question personnalisée</p>
                   </div>
-
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-muted/5 border border-transparent hover:border-muted-foreground/10 transition-all">
-                    <div className="flex items-center gap-3">
-                      <Globe className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-sm font-bold">Événement Online</p>
-                        <p className="text-[10px] text-muted-foreground font-medium">Lien de stream ou visio.</p>
-                      </div>
+                )}
+              </div>
+              <Separator className="my-2" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className={cn("p-4 rounded-xl border-2 transition-all", formData.isRecurring ? "border-primary bg-primary/[0.02]" : "border-gray-50 bg-gray-50/30")}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest">Récurrence</span>
                     </div>
-                    <Button
-                      variant={formData.isOnline ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setFormData({ ...formData, isOnline: !formData.isOnline })}
-                      className="h-8 rounded-lg text-[10px] font-black uppercase"
+                    <button 
+                      onClick={() => setFormData({ ...formData, isRecurring: !formData.isRecurring })} 
+                      className={cn("text-[8px] font-black uppercase px-2.5 py-1 rounded-lg transition-all", formData.isRecurring ? "bg-primary text-white shadow-sm" : "bg-gray-200 text-gray-500")}
                     >
-                      {formData.isOnline ? "Activé" : "Désactivé"}
-                    </Button>
+                      {formData.isRecurring ? 'Activé' : 'Désactivé'}
+                    </button>
                   </div>
+                  {formData.isRecurring && (
+                    <Select value={formData.recurrenceRule} onValueChange={(val) => setFormData({...formData, recurrenceRule: val})}>
+                      <SelectTrigger className="h-8 text-[10px] bg-white border-primary/20">
+                        <SelectValue placeholder="Choisir la fréquence..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily" className="text-[10px]">Chaque jour</SelectItem>
+                        <SelectItem value="weekly" className="text-[10px]">Chaque semaine</SelectItem>
+                        <SelectItem value="monthly" className="text-[10px]">Chaque mois</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
 
-                <div className="space-y-4">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tags de Découverte</Label>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {(formData.tags || []).map(tag => (
-                      <Badge key={tag} className="bg-primary/10 text-primary border-none font-bold px-3 py-1 flex items-center gap-1.5">
-                        {tag} <XCircle className="h-3 w-3 cursor-pointer" onClick={() => setFormData({ ...formData, tags: (formData.tags || []).filter(t => t !== tag) })} />
-                      </Badge>
-                    ))}
+                <div className={cn("p-4 rounded-xl border-2 transition-all", formData.isOnline ? "border-primary bg-primary/[0.02]" : "border-gray-50 bg-gray-50/30")}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest">En Ligne</span>
+                    </div>
+                    <button 
+                      onClick={() => setFormData({ ...formData, isOnline: !formData.isOnline })} 
+                      className={cn("text-[8px] font-black uppercase px-2.5 py-1 rounded-lg transition-all", formData.isOnline ? "bg-primary text-white shadow-sm" : "bg-gray-200 text-gray-500")}
+                    >
+                      {formData.isOnline ? 'Activé' : 'Désactivé'}
+                    </button>
                   </div>
-                  <div className="relative">
-                    <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Ajouter un tag (Entrée)..."
-                      className="h-10 pl-10 text-sm font-bold rounded-xl"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          const val = (e.target as HTMLInputElement).value.trim();
-                          if (val && !formData.tags.includes(val)) {
-                            setFormData({ ...formData, tags: [...formData.tags, val] });
-                            (e.target as HTMLInputElement).value = '';
-                          }
-                        }
-                      }}
+                  {formData.isOnline && (
+                    <Input 
+                      placeholder="Lien de la réunion (Zoom, Meet...)" 
+                      className="h-8 text-[10px] bg-white border-primary/20" 
+                      value={formData.meetingLink || ''} 
+                      onChange={(e) => setFormData({ ...formData, meetingLink: e.target.value })} 
                     />
-                  </div>
+                  )}
                 </div>
               </div>
-
-              <div className="flex justify-between pt-10">
-                <Button variant="ghost" onClick={() => setTab('tickets')} className="h-10 px-6 font-bold gap-2"><ChevronLeft size={18} /> Retour</Button>
-                <Button onClick={() => setTab('visibility')} className="h-10 px-8 rounded-xl font-black gap-2">Suivant <ChevronRight size={18} /></Button>
-              </div>
+              <div className="flex justify-between pt-4"><Button variant="ghost" onClick={() => setTab('tickets')} className="h-9 text-[10px] uppercase font-bold">Retour</Button><Button onClick={() => setTab('visibility')} size="sm" className="h-9 px-6 font-bold text-[10px] uppercase">Suivant</Button></div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="visibility">
-          <Card className="border-none shadow-xl rounded-xl bg-card/80 backdrop-blur-md">
-            <CardHeader className="p-8 pb-4">
-              <CardTitle className="text-xl font-black tracking-tight">Paramètres de Publication</CardTitle>
-              <CardDescription className="text-sm font-medium">Définissez la portée de votre événement.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 pt-6 space-y-10">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div
-                  className={cn(
-                    "group relative p-6 rounded-2xl border-4 cursor-pointer transition-all duration-300",
-                    formData.visibility === 'public' ? "border-primary bg-primary/5 shadow-xl scale-[1.02]" : "border-muted/30 hover:border-muted"
-                  )}
-                  onClick={() => setFormData({ ...formData, visibility: 'public' })}
-                >
-                  <div className={cn(
-                    "h-12 w-12 rounded-xl mb-4 flex items-center justify-center transition-all",
-                    formData.visibility === 'public' ? "bg-primary text-white shadow-lg shadow-primary/30" : "bg-muted text-muted-foreground"
-                  )}>
-                    <Globe className="h-6 w-6" />
-                  </div>
-                  <h4 className={cn("text-lg font-black mb-1", formData.visibility === 'public' ? "text-primary" : "text-foreground")}>Public</h4>
-                  <p className="text-xs font-medium text-muted-foreground">Visible par tous sur la carte Clubz.</p>
+          <Card className="border-none shadow-sm rounded-2xl bg-white border border-gray-50">
+            <CardHeader className="p-5 pb-2"><CardTitle className="text-sm font-bold">Publication</CardTitle></CardHeader>
+            <CardContent className="p-5 pt-4 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div onClick={() => setFormData({ ...formData, visibility: 'public' })} className={cn("p-4 rounded-xl border-2 cursor-pointer transition-all", formData.visibility === 'public' ? "border-primary bg-primary/5 shadow-sm" : "border-gray-50 bg-gray-50/30 hover:border-gray-200")}>
+                  <Globe size={20} className={cn("mb-2", formData.visibility === 'public' ? "text-primary" : "text-gray-300")} />
+                  <h4 className="text-xs font-bold">Public</h4>
                 </div>
-
-                <div
-                  className={cn(
-                    "group relative p-6 rounded-2xl border-4 cursor-pointer transition-all duration-300",
-                    formData.visibility === 'community_only' ? "border-primary bg-primary/5 shadow-xl scale-[1.02]" : "border-muted/30 hover:border-muted"
-                  )}
-                  onClick={() => setFormData({ ...formData, visibility: 'community_only' })}
-                >
-                  <div className={cn(
-                    "h-12 w-12 rounded-xl mb-4 flex items-center justify-center transition-all",
-                    formData.visibility === 'community_only' ? "bg-primary text-white shadow-lg shadow-primary/30" : "bg-muted text-muted-foreground"
-                  )}>
-                    <Lock className="h-6 w-6" />
-                  </div>
-                  <h4 className={cn("text-lg font-black mb-1", formData.visibility === 'community_only' ? "text-primary" : "text-foreground")}>Privé</h4>
-                  <p className="text-xs font-medium text-muted-foreground">Uniquement pour les membres de la communauté.</p>
+                <div onClick={() => setFormData({ ...formData, visibility: 'community_only' })} className={cn("p-4 rounded-xl border-2 cursor-pointer transition-all", formData.visibility === 'community_only' ? "border-primary bg-primary/5 shadow-sm" : "border-gray-50 bg-gray-50/30 hover:border-gray-200")}>
+                  <Lock size={20} className={cn("mb-2", formData.visibility === 'community_only' ? "text-primary" : "text-gray-300")} />
+                  <h4 className="text-xs font-bold">Privé</h4>
                 </div>
               </div>
-
-              <div className="flex justify-between items-center pt-6">
-                <Button variant="ghost" onClick={() => setTab('form')} className="h-10 px-6 font-bold gap-2"><ChevronLeft size={18} /> Retour</Button>
-                <Button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className="h-11 px-10 rounded-xl font-black gap-2 shadow-xl shadow-primary/20 hover:scale-105 transition-all"
-                >
-                  {submitting ? <Loader2 className="animate-spin h-5 w-5" /> : (isEditMode ? <CheckCircle2 size={20} /> : <Plus size={20} />)}
-                  {isEditMode ? 'Mettre à jour' : 'Publier l\'événement'}
-                </Button>
-              </div>
+              <div className="flex justify-between items-center pt-4"><Button variant="ghost" onClick={() => setTab('form')} className="h-9 text-[10px] uppercase font-bold">Retour</Button><Button onClick={handleSubmit} disabled={submitting} size="sm" className="h-10 px-8 font-bold text-[10px] uppercase tracking-wider shadow-lg shadow-primary/20">{submitting ? <Loader2 className="animate-spin h-4 w-4" /> : 'Publier'}</Button></div>
             </CardContent>
           </Card>
         </TabsContent>

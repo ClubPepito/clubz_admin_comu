@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { 
   Search,
   Filter,
-  Mail,
   MoreVertical,
-  ShieldCheck,
   Loader2,
   Calendar,
 } from 'lucide-react';
@@ -85,148 +83,130 @@ const Members = () => {
   );
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex justify-between items-end">
-        <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tight text-foreground">Communauté 👥</h2>
-          <p className="text-muted-foreground font-medium">Gérez les membres de vos différentes communautés Clubz.</p>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-10">
+      <div className="flex justify-between items-center">
+        <div className="space-y-0.5">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Communauté 👥</h2>
+          <p className="text-xs text-muted-foreground font-medium">Gérez les membres.</p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" className="h-12 px-6 rounded-2xl border-2 font-bold gap-2 hover:bg-muted/50 transition-all">
-            Exporter la liste
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl border-gray-100 bg-white font-bold text-[10px] uppercase tracking-wider hover:bg-gray-50 transition-all">
+            Exporter
           </Button>
-          <Button className="h-12 px-6 rounded-2xl gap-2 shadow-lg shadow-primary/20 font-bold">
-            Inviter un membre
+          <Button size="sm" className="h-9 px-4 rounded-xl gap-2 shadow-md shadow-primary/10 font-bold text-[10px] uppercase tracking-wider">
+            Inviter
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="border-none shadow-md bg-card/50 backdrop-blur-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Total Membres</CardTitle>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="border-none shadow-sm bg-white rounded-xl border border-gray-50">
+          <CardHeader className="p-4 pb-1.5">
+            <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Total Membres</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black tracking-tighter">{members.length}</div>
+          <CardContent className="p-4 pt-0">
+            <div className="text-xl font-black tracking-tighter">{members.length}</div>
           </CardContent>
         </Card>
-        <Card className="border-none shadow-md bg-card/50 backdrop-blur-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Nouveaux (7j)</CardTitle>
+        <Card className="border-none shadow-sm bg-white rounded-xl border border-gray-50">
+          <CardHeader className="p-4 pb-1.5">
+            <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Nouveaux (7j)</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black tracking-tighter text-success">
+          <CardContent className="p-4 pt-0">
+            <div className="text-xl font-black tracking-tighter text-success">
               +{members.filter(m => new Date(m.joinedAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-none shadow-md bg-card/50 backdrop-blur-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Rétention</CardTitle>
+        <Card className="border-none shadow-sm bg-white rounded-xl border border-gray-50">
+          <CardHeader className="p-4 pb-1.5">
+            <CardTitle className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Engagement</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black tracking-tighter text-primary">-</div>
+          <CardContent className="p-4 pt-0">
+            <div className="text-xl font-black tracking-tighter text-primary">Normal</div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-none shadow-2xl rounded-[2.5rem] bg-card/80 backdrop-blur-md overflow-hidden">
-        <CardHeader className="p-10 pb-6 flex flex-row items-center justify-between">
+      <Card className="border-none shadow-sm rounded-2xl bg-white overflow-hidden border border-gray-50">
+        <CardHeader className="p-5 pb-4 flex flex-row items-center justify-between gap-4">
           <div>
-            <CardTitle className="text-2xl font-black tracking-tight">Liste des Membres</CardTitle>
-            <CardDescription className="text-base font-medium">Visualisez et gérez les droits d'accès.</CardDescription>
+            <CardTitle className="text-lg font-bold tracking-tight">Membres</CardTitle>
+            <CardDescription className="text-[10px] font-medium uppercase tracking-tight opacity-50">Visualisation des accès.</CardDescription>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <div className="relative">
-              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" strokeWidth={2.5} />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground opacity-50" />
               <Input 
                 placeholder="Rechercher..." 
-                className="pl-12 h-11 w-80 bg-background border-none shadow-sm rounded-xl font-bold text-sm" 
+                className="pl-9 h-9 w-48 sm:w-64 bg-white border-gray-100 shadow-sm rounded-lg font-medium text-[11px]" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Button variant="outline" className="h-11 rounded-xl border-2 font-bold gap-2 hover:bg-muted/50">
-              <Filter size={18} strokeWidth={2.5} /> Filtrer
+            <Button variant="outline" size="sm" className="h-9 rounded-lg border-gray-100 font-bold gap-2 text-[10px] uppercase tracking-wider">
+              <Filter size={14} /> Filtre
             </Button>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground font-bold">Chargement des membres...</p>
+            <div className="flex flex-col items-center justify-center py-20 gap-2">
+              <Loader2 className="h-8 w-8 animate-spin text-primary opacity-40" />
+              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Chargement...</p>
             </div>
           ) : filteredMembers.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground font-bold">Aucun membre trouvé.</div>
+            <div className="text-center py-16 text-[11px] text-muted-foreground font-bold uppercase tracking-widest">Aucun membre.</div>
           ) : (
             <Table>
-              <TableHeader className="bg-muted/30">
-                <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="px-10 h-14 text-[10px] font-black uppercase tracking-widest">Utilisateur</TableHead>
-                  <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Communauté</TableHead>
-                  <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Rôle</TableHead>
-                  <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Rejoint le</TableHead>
-                  <TableHead className="px-10 h-14"></TableHead>
+              <TableHeader className="bg-gray-50/50">
+                <TableRow className="hover:bg-transparent border-gray-50">
+                  <TableHead className="px-5 h-10 text-[9px] font-black uppercase tracking-widest opacity-50">Utilisateur</TableHead>
+                  <TableHead className="h-10 text-[9px] font-black uppercase tracking-widest opacity-50">Rôle</TableHead>
+                  <TableHead className="h-10 text-[9px] font-black uppercase tracking-widest opacity-50">Date</TableHead>
+                  <TableHead className="px-5 h-10"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredMembers.map((m) => (
-                  <TableRow key={m.id} className="group hover:bg-primary/[0.01] transition-colors border-muted/30">
-                    <TableCell className="px-10 py-6">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12 rounded-2xl border-2 border-transparent group-hover:border-primary/20 transition-all shadow-sm">
+                  <TableRow key={m.id} className="group hover:bg-gray-50/50 transition-colors border-gray-50">
+                    <TableCell className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8 rounded-lg border border-gray-100 shadow-sm shrink-0">
                           <AvatarImage src={m.user?.profileImage} />
-                          <AvatarFallback className="bg-primary/5 text-primary font-black text-xs">{m.user?.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                          <AvatarFallback className="bg-primary/5 text-primary font-black text-[10px]">{m.user?.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <div className="space-y-1">
-                          <p className="text-base font-black leading-none group-hover:text-primary transition-colors">{m.user?.name}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground font-bold opacity-60">
-                            <Mail size={12} /> {m.user?.email}
-                          </div>
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-bold leading-tight group-hover:text-primary transition-colors truncate">{m.user?.name}</p>
+                          <p className="text-[10px] text-muted-foreground font-medium truncate opacity-60">{m.user?.email}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="rounded-lg bg-primary/5 text-primary border-primary/20 font-black uppercase text-[9px] px-3 py-1 gap-1.5">
-                        <ShieldCheck size={10} /> {m.community?.name}
+                      <Badge variant="outline" className="rounded-md bg-gray-50 text-foreground border-gray-100 font-bold uppercase text-[8px] px-1.5 py-0">
+                        {m.role?.name || 'Membre'}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <span className="text-xs font-black uppercase tracking-tighter text-foreground">
-                        {m.role?.name || 'Membre'}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-                        <Calendar size={14} className="text-primary/40" />
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground opacity-70">
+                        <Calendar size={12} className="text-primary/40" />
                         {new Date(m.joinedAt).toLocaleDateString()}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right px-10">
-                      <div className="flex justify-end gap-2">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger>
-                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary">
-                              <MoreVertical size={18} strokeWidth={2.5} />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="rounded-xl border-none shadow-2xl">
-                            <DropdownMenuItem className="font-bold gap-2" onClick={() => handleRoleChange(m.id, 'admin')}>
-                              Promouvoir Admin
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="font-bold gap-2" onClick={() => handleRoleChange(m.id, 'moderator')}>
-                              Promouvoir Modérateur
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="font-bold gap-2" onClick={() => handleRoleChange(m.id, 'member')}>
-                              Rétrograder Membre
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="font-bold gap-2 text-destructive" onClick={() => handleKickMember(m.id)}>
-                              Exclure
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                    <TableCell className="text-right px-5">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-gray-100">
+                            <MoreVertical size={14} />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="rounded-lg border border-gray-100 shadow-xl p-1 min-w-[140px]">
+                          <DropdownMenuItem className="text-[10px] font-bold cursor-pointer" onClick={() => handleRoleChange(m.id, 'admin')}>Admin</DropdownMenuItem>
+                          <DropdownMenuItem className="text-[10px] font-bold cursor-pointer" onClick={() => handleRoleChange(m.id, 'moderator')}>Modérateur</DropdownMenuItem>
+                          <DropdownMenuItem className="text-[10px] font-bold cursor-pointer" onClick={() => handleRoleChange(m.id, 'member')}>Membre</DropdownMenuItem>
+                          <DropdownMenuItem className="text-[10px] font-bold text-destructive hover:bg-destructive/5 cursor-pointer" onClick={() => handleKickMember(m.id)}>Exclure</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}

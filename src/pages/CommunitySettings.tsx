@@ -2,12 +2,9 @@ import { useState, useEffect } from 'react';
 import { useCommunity } from '../context/CommunityContext';
 import { 
   Settings, 
-  Users, 
   ShieldCheck, 
   LayoutGrid, 
-  CheckCircle2, 
   XCircle, 
-  Palette, 
   Image as ImageIcon,
   Save,
   Loader2,
@@ -35,9 +32,7 @@ const CommunitySettings = () => {
   const [widgets, setWidgets] = useState<any[]>([]);
 
   useEffect(() => {
-    if (selectedCommunityId) {
-      fetchData();
-    }
+    if (selectedCommunityId) fetchData();
   }, [selectedCommunityId]);
 
   const fetchData = async () => {
@@ -48,162 +43,94 @@ const CommunitySettings = () => {
         communityService.getOne(selectedCommunityId),
         communityService.getMembers(selectedCommunityId),
         communityService.getPendingRequests(selectedCommunityId),
-        communityService.getWidgets(selectedCommunityId).catch(() => ({ data: [] })) // Handle if endpoint missing
+        communityService.getWidgets(selectedCommunityId).catch(() => ({ data: [] }))
       ]);
-      
       setCommunity(commRes.data);
       setMembers(membersRes.data || []);
       setPendingRequests(requestsRes.data || []);
       setWidgets(widgetsRes.data || [
-        { id: 'spotify', name: 'Spotify Player', description: 'Permet aux membres de partager leurs playlists.', enabled: true },
-        { id: 'instagram', name: 'Feed Instagram', description: 'Affiche les derniers posts de la communauté.', enabled: false },
-        { id: 'gamification', name: 'Système de Points', description: 'Récompense l\'engagement des membres.', enabled: true },
+        { id: 'spotify', name: 'Spotify Player', description: 'Partagez vos playlists.', enabled: true },
+        { id: 'instagram', name: 'Feed Instagram', description: 'Affiche les derniers posts.', enabled: false },
+        { id: 'gamification', name: 'Système de Points', description: 'Récompense l\'engagement.', enabled: true },
       ]);
-    } catch (err) {
-      console.error('Failed to fetch settings', err);
-      toast.error('Erreur lors du chargement des paramètres');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { toast.error('Erreur chargement'); } finally { setLoading(false); }
   };
 
   const handleUpdate = async () => {
     try {
       setSaving(true);
       await communityService.update(selectedCommunityId!, community);
-      toast.success('Paramètres mis à jour !');
-    } catch (err) {
-      toast.error('Erreur lors de la sauvegarde');
-    } finally {
-      setSaving(false);
-    }
+      toast.success('Mis à jour !');
+    } catch (err) { toast.error('Erreur'); } finally { setSaving(false); }
   };
 
   const handleRequest = async (userId: string, action: 'accept' | 'reject') => {
     try {
       await communityService.respondToRequest(selectedCommunityId!, userId, action);
-      toast.success(action === 'accept' ? 'Membre accepté !' : 'Demande refusée');
+      toast.success(action === 'accept' ? 'Accepté !' : 'Refusé');
       setPendingRequests(prev => prev.filter(r => r.userId !== userId));
-    } catch (err) {
-      toast.error('Erreur lors de la réponse à la demande');
-    }
+    } catch (err) { toast.error('Erreur'); }
   };
 
-  if (!selectedCommunityId) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <div className="p-6 rounded-full bg-muted/20">
-          <Settings size={48} className="text-muted-foreground" />
-        </div>
-        <h2 className="text-2xl font-black">Sélectionnez une communauté</h2>
-        <p className="text-muted-foreground font-medium text-center max-w-md">
-          Veuillez choisir une communauté dans la barre latérale pour accéder à ses paramètres avancés.
-        </p>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 size={40} className="animate-spin text-primary" />
-      </div>
-    );
-  }
+  if (!selectedCommunityId) return <div className="flex flex-col items-center justify-center min-h-[60vh] opacity-30"><Settings size={48} /><h2 className="text-xl font-bold mt-4">Sélectionnez une communauté</h2></div>;
+  if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 size={32} className="animate-spin text-primary opacity-40" /></div>;
 
   return (
-    <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex justify-between items-end">
-        <div className="space-y-1">
-          <h2 className="text-3xl font-black tracking-tight">Paramètres de {community?.name}</h2>
-          <p className="text-sm text-muted-foreground font-medium">Gérez l'identité et les membres de votre univers.</p>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
+      <div className="flex justify-between items-center">
+        <div className="space-y-0.5">
+          <h2 className="text-2xl font-bold tracking-tight">{community?.name}</h2>
+          <p className="text-xs text-muted-foreground font-medium">Paramètres de la communauté.</p>
         </div>
-        <Button onClick={handleUpdate} disabled={saving} className="h-10 px-6 rounded-xl font-black gap-2 shadow-lg shadow-primary/10">
-          {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} Sauvegarder
+        <Button onClick={handleUpdate} disabled={saving} size="sm" className="h-9 px-5 rounded-xl font-bold gap-2 shadow-md shadow-primary/10">
+          {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Sauvegarder
         </Button>
       </div>
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-8 h-12 bg-muted/20 backdrop-blur-xl rounded-xl p-1.5 border-none shadow-inner overflow-hidden">
-          <TabsTrigger value="general" className="rounded-lg gap-2 font-black uppercase text-[10px] tracking-widest transition-all">
-            <Palette className="h-4 w-4" /> Identité
-          </TabsTrigger>
-          <TabsTrigger value="members" className="rounded-lg gap-2 font-black uppercase text-[10px] tracking-widest transition-all">
-            <Users className="h-4 w-4" /> Membres
-          </TabsTrigger>
-          <TabsTrigger value="widgets" className="rounded-lg gap-2 font-black uppercase text-[10px] tracking-widest transition-all">
-            <LayoutGrid className="h-4 w-4" /> Modules
-          </TabsTrigger>
-          <TabsTrigger value="requests" className="rounded-lg gap-2 font-black uppercase text-[10px] tracking-widest transition-all relative">
-            <ShieldCheck className="h-4 w-4" /> Requêtes
-            {pendingRequests.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-primary text-white text-[8px] h-4 w-4 rounded-full flex items-center justify-center shadow-lg">
-                {pendingRequests.length}
-              </span>
-            )}
+        <TabsList className="h-10 bg-gray-100/50 rounded-lg p-1 border border-gray-200/50 mb-6 w-fit">
+          <TabsTrigger value="general" className="rounded-md font-bold px-5 text-[10px] uppercase tracking-tight h-full data-[state=active]:bg-white data-[state=active]:text-[#247596] data-[state=active]:shadow-sm transition-all duration-200">Identité</TabsTrigger>
+          <TabsTrigger value="members" className="rounded-md font-bold px-5 text-[10px] uppercase tracking-tight h-full data-[state=active]:bg-white data-[state=active]:text-[#247596] data-[state=active]:shadow-sm transition-all duration-200">Équipe</TabsTrigger>
+          <TabsTrigger value="widgets" className="rounded-md font-bold px-5 text-[10px] uppercase tracking-tight h-full data-[state=active]:bg-white data-[state=active]:text-[#247596] data-[state=active]:shadow-sm transition-all duration-200">Modules</TabsTrigger>
+          <TabsTrigger value="requests" className="rounded-md font-bold px-5 text-[10px] uppercase tracking-tight h-full data-[state=active]:bg-white data-[state=active]:text-[#247596] data-[state=active]:shadow-sm transition-all duration-200 relative">
+            Requêtes {pendingRequests.length > 0 && <span className="ml-1.5 bg-primary text-white text-[8px] px-1 rounded-full">{pendingRequests.length}</span>}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-6">
-          <Card className="border-none shadow-xl bg-card/60 backdrop-blur-sm rounded-xl overflow-hidden">
-            <CardHeader className="p-8 pb-4">
-              <CardTitle className="text-xl font-black tracking-tight">Branding & Informations</CardTitle>
-              <CardDescription className="text-sm font-medium">Configurez l'aspect visuel de votre communauté.</CardDescription>
+          <Card className="border-none shadow-sm bg-white rounded-2xl border border-gray-50 overflow-hidden">
+            <CardHeader className="p-5 pb-2">
+              <CardTitle className="text-sm font-bold">Branding</CardTitle>
+              <CardDescription className="text-[10px] font-medium uppercase tracking-tight opacity-50">Identité visuelle</CardDescription>
             </CardHeader>
-            <CardContent className="p-8 pt-4 space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <CardContent className="p-5 pt-4 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Nom de la Communauté</Label>
-                    <Input 
-                      value={community?.name} 
-                      onChange={(e) => setCommunity({...community, name: e.target.value})}
-                      className="h-12 text-base font-bold"
-                    />
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Nom</Label>
+                    <Input value={community?.name} onChange={(e) => setCommunity({...community, name: e.target.value})} className="h-9 text-xs font-bold" />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Bio Courte</Label>
-                    <textarea 
-                      className="w-full min-h-[100px] rounded-xl border-2 border-transparent bg-muted/20 px-4 py-3 text-sm font-bold placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary/30 transition-all resize-none"
-                      value={community?.description}
-                      onChange={(e) => setCommunity({...community, description: e.target.value})}
-                    />
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Description</Label>
+                    <textarea value={community?.description} onChange={(e) => setCommunity({...community, description: e.target.value})} className="w-full min-h-[80px] rounded-lg border border-gray-100 bg-gray-50/30 px-3 py-2 text-xs font-medium focus:ring-1 focus:ring-primary/20 outline-none resize-none" />
                   </div>
                 </div>
-
-                <div className="space-y-6">
-                  <div className="flex items-center gap-6">
-                    <div className="h-24 w-24 rounded-2xl bg-muted/20 border-2 border-dashed border-muted-foreground/30 flex items-center justify-center relative overflow-hidden group">
-                      {community?.logoUrl ? (
-                        <img src={community.logoUrl} className="h-full w-full object-cover" />
-                      ) : (
-                        <ImageIcon size={32} className="text-muted-foreground" />
-                      )}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                        <Plus size={24} className="text-white" />
-                      </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-20 w-20 rounded-xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center relative overflow-hidden group shrink-0">
+                      {community?.logoUrl ? <img src={community.logoUrl} className="h-full w-full object-cover" /> : <ImageIcon size={24} className="text-muted-foreground opacity-30" />}
                     </div>
-                    <div className="space-y-2">
-                      <h4 className="font-black text-sm uppercase tracking-widest">Logo Officiel</h4>
-                      <p className="text-xs text-muted-foreground font-medium">Recommandé: 512x512px (SVG ou PNG).</p>
-                      <Button variant="outline" size="sm" className="h-9 px-4 rounded-lg font-bold text-xs mt-2">Changer le logo</Button>
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-[11px] uppercase tracking-wider">Logo Officiel</h4>
+                      <p className="text-[10px] text-muted-foreground leading-tight">PNG ou SVG (512x512px).</p>
+                      <Button variant="outline" size="sm" className="h-7 px-3 rounded-md font-bold text-[9px] uppercase mt-2">Changer</Button>
                     </div>
                   </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Couleur Identitaire</Label>
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="color" 
-                        value={community?.primaryColor || '#0ea5e9'} 
-                        onChange={(e) => setCommunity({...community, primaryColor: e.target.value})}
-                        className="h-10 w-10 rounded-lg cursor-pointer border-none bg-transparent"
-                      />
-                      <Input 
-                        value={community?.primaryColor || '#0ea5e9'} 
-                        onChange={(e) => setCommunity({...community, primaryColor: e.target.value})}
-                        className="h-10 font-mono text-xs w-32"
-                      />
+                  <div className="space-y-2 pt-2">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Couleur Principale</Label>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={community?.primaryColor || '#247596'} onChange={(e) => setCommunity({...community, primaryColor: e.target.value})} className="h-8 w-8 rounded-md cursor-pointer border-none bg-transparent" />
+                      <Input value={community?.primaryColor || '#247596'} onChange={(e) => setCommunity({...community, primaryColor: e.target.value})} className="h-8 font-mono text-[10px] w-24" />
                     </div>
                   </div>
                 </div>
@@ -213,36 +140,28 @@ const CommunitySettings = () => {
         </TabsContent>
 
         <TabsContent value="members" className="space-y-6">
-          <Card className="border-none shadow-xl bg-card/60 backdrop-blur-sm rounded-xl overflow-hidden">
-            <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between">
+          <Card className="border-none shadow-sm bg-white rounded-2xl border border-gray-50 overflow-hidden">
+            <CardHeader className="p-5 pb-2 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-xl font-black tracking-tight">Gestion de l'Équipe</CardTitle>
-                <CardDescription className="text-sm font-medium">Contrôlez qui peut administrer votre univers.</CardDescription>
+                <CardTitle className="text-sm font-bold">Équipe Administrative</CardTitle>
+                <CardDescription className="text-[10px] font-medium uppercase tracking-tight opacity-50">Gestion des droits.</CardDescription>
               </div>
-              <Button size="sm" className="h-10 px-4 rounded-xl font-bold gap-2">
-                <Plus size={16} /> Inviter
-              </Button>
+              <Button size="sm" className="h-8 px-3 rounded-lg font-bold text-[10px] uppercase tracking-wider gap-1.5"><Plus size={14} /> Inviter</Button>
             </CardHeader>
-            <CardContent className="p-8 pt-4">
-              <div className="space-y-3">
+            <CardContent className="p-5 pt-4">
+              <div className="grid gap-2">
                 {members.map((member: any) => (
-                  <div key={member.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/10 border border-transparent hover:border-muted-foreground/20 transition-all">
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary text-sm">
-                        {member.user?.name?.substring(0, 1) || 'U'}
-                      </div>
+                  <div key={member.id} className="flex items-center justify-between p-3 rounded-xl bg-gray-50/50 border border-transparent hover:border-gray-100 transition-all">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-[10px]">{member.user?.name?.substring(0, 1)}</div>
                       <div>
-                        <p className="font-bold text-sm">{member.user?.name}</p>
-                        <p className="text-[10px] text-muted-foreground font-medium">{member.user?.email}</p>
+                        <p className="font-bold text-xs">{member.user?.name}</p>
+                        <p className="text-[9px] text-muted-foreground font-medium opacity-60">{member.user?.email}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <Badge variant="outline" className="h-7 px-3 text-[10px] font-black uppercase tracking-widest bg-background">
-                        {member.role?.name || 'Membre'}
-                      </Badge>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive">
-                        <Trash2 size={16} />
-                      </Button>
+                    <div className="flex items-center gap-3">
+                      <Badge variant="outline" className="h-6 px-2 text-[8px] font-bold uppercase tracking-wider bg-white border-gray-100">{member.role?.name || 'Membre'}</Badge>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"><Trash2 size={14} /></Button>
                     </div>
                   </div>
                 ))}
@@ -251,83 +170,45 @@ const CommunitySettings = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="widgets" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <TabsContent value="widgets" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {widgets.map((widget) => (
-            <Card key={widget.id} className={cn(
-              "border-none shadow-lg transition-all duration-300 rounded-xl overflow-hidden",
-              widget.enabled ? "bg-primary/5 ring-1 ring-primary/20" : "bg-card/40 opacity-70 grayscale"
-            )}>
-              <CardHeader className="pb-2">
+            <Card key={widget.id} className={cn("border-none shadow-sm transition-all rounded-xl overflow-hidden border", widget.enabled ? "bg-white border-primary/20" : "bg-gray-50 opacity-60 grayscale")}>
+              <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className={cn(
-                    "p-2 rounded-lg",
-                    widget.enabled ? "bg-primary text-white" : "bg-muted text-muted-foreground"
-                  )}>
-                    {widget.id === 'spotify' && <LayoutGrid size={20} />}
-                    {widget.id === 'instagram' && <ImageIcon size={20} />}
-                    {widget.id === 'gamification' && <ShieldCheck size={20} />}
+                  <div className={cn("p-1.5 rounded-lg", widget.enabled ? "bg-primary/10 text-primary" : "bg-gray-200 text-gray-400")}>
+                    {widget.id === 'spotify' && <LayoutGrid size={16} />}
+                    {widget.id === 'instagram' && <ImageIcon size={16} />}
+                    {widget.id === 'gamification' && <ShieldCheck size={16} />}
                   </div>
-                  <Button 
-                    variant={widget.enabled ? "default" : "outline"} 
-                    size="sm" 
-                    className="h-8 rounded-lg text-[10px] font-black uppercase tracking-wider"
-                    onClick={() => {
-                      setWidgets(prev => prev.map(w => w.id === widget.id ? {...w, enabled: !w.enabled} : w));
-                    }}
-                  >
-                    {widget.enabled ? 'Activé' : 'Désactivé'}
-                  </Button>
+                  <button onClick={() => setWidgets(prev => prev.map(w => w.id === widget.id ? {...w, enabled: !w.enabled} : w))} className={cn("text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md transition-all", widget.enabled ? "bg-primary text-white" : "bg-gray-200 text-gray-500")}>{widget.enabled ? 'On' : 'Off'}</button>
                 </div>
-                <CardTitle className="text-base font-black mt-4">{widget.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-xs font-medium text-muted-foreground leading-relaxed">{widget.description}</p>
+                <div>
+                  <h4 className="text-[11px] font-bold">{widget.name}</h4>
+                  <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{widget.description}</p>
+                </div>
               </CardContent>
             </Card>
           ))}
         </TabsContent>
 
         <TabsContent value="requests" className="space-y-6">
-          <Card className="border-none shadow-xl bg-card/60 backdrop-blur-sm rounded-xl overflow-hidden">
-            <CardHeader className="p-8 pb-4">
-              <CardTitle className="text-xl font-black tracking-tight">Demandes en Attente</CardTitle>
-              <CardDescription className="text-sm font-medium">Nouveaux membres souhaitant rejoindre votre univers.</CardDescription>
+          <Card className="border-none shadow-sm bg-white rounded-2xl border border-gray-50 overflow-hidden">
+            <CardHeader className="p-5 pb-2">
+              <CardTitle className="text-sm font-bold">Demandes d'Adhésion</CardTitle>
+              <CardDescription className="text-[10px] font-medium uppercase tracking-tight opacity-50">File d'attente.</CardDescription>
             </CardHeader>
-            <CardContent className="p-8 pt-4">
-              {pendingRequests.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
-                  <div className="h-16 w-16 rounded-full bg-muted/10 flex items-center justify-center">
-                    <CheckCircle2 size={32} className="text-muted-foreground opacity-30" />
-                  </div>
-                  <p className="text-sm font-bold text-muted-foreground">Aucune demande d'adhésion pour le moment.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
+            <CardContent className="p-5 pt-4">
+              {pendingRequests.length === 0 ? <div className="py-12 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-30">Aucune demande</div> : (
+                <div className="grid gap-2">
                   {pendingRequests.map((request) => (
-                    <div key={request.id} className="flex items-center justify-between p-5 rounded-xl bg-muted/10 border-2 border-transparent hover:border-primary/20 transition-all">
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center font-black text-primary">
-                          {request.user?.name?.substring(0, 1)}
-                        </div>
-                        <div>
-                          <p className="font-bold text-base">{request.user?.name}</p>
-                          <p className="text-xs text-muted-foreground font-medium">{request.user?.email}</p>
-                        </div>
-                      </div>
+                    <div key={request.id} className="flex items-center justify-between p-3.5 rounded-xl bg-gray-50/50 border border-transparent hover:border-gray-100 transition-all">
                       <div className="flex items-center gap-3">
-                        <Button 
-                          onClick={() => handleRequest(request.userId, 'reject')}
-                          variant="ghost" 
-                          className="h-10 w-10 rounded-xl text-destructive hover:bg-destructive/10"
-                        >
-                          <XCircle size={20} />
-                        </Button>
-                        <Button 
-                          onClick={() => handleRequest(request.userId, 'accept')}
-                          className="h-10 px-6 rounded-xl font-black gap-2 shadow-lg shadow-primary/20"
-                        >
-                          <CheckCircle2 size={18} /> Accepter
-                        </Button>
+                        <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-[11px]">{request.user?.name?.substring(0, 1)}</div>
+                        <div><p className="font-bold text-sm">{request.user?.name}</p><p className="text-[10px] text-muted-foreground opacity-60">{request.user?.email}</p></div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button onClick={() => handleRequest(request.userId, 'reject')} variant="ghost" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/5"><XCircle size={16} /></Button>
+                        <Button onClick={() => handleRequest(request.userId, 'accept')} size="sm" className="h-8 px-4 rounded-lg font-bold text-[10px] uppercase tracking-wider shadow-sm">Accepter</Button>
                       </div>
                     </div>
                   ))}

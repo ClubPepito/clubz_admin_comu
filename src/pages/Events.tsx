@@ -68,133 +68,131 @@ const Events = () => {
   );
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex justify-between items-end">
-        <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tight text-foreground">Mes Événements 🗓️</h2>
-          <p className="text-muted-foreground font-medium">Gérez vos prochains événements et suivez leurs performances.</p>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-10">
+      <div className="flex justify-between items-center">
+        <div className="space-y-0.5">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Mes Événements 🗓️</h2>
+          <p className="text-xs text-muted-foreground font-medium">Gérez vos prochains événements.</p>
         </div>
         <Link to="/create">
-          <Button className="h-12 px-6 rounded-2xl gap-2 shadow-lg shadow-primary/20 font-bold">
-            <Plus size={20} strokeWidth={3} /> Créer un Événement
+          <Button size="sm" className="h-10 px-5 rounded-xl gap-2 shadow-md shadow-primary/10 font-bold text-xs">
+            <Plus size={16} strokeWidth={3} /> Créer un Événement
           </Button>
         </Link>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:w-96">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" strokeWidth={2.5} />
+      <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="relative w-full md:w-80">
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground opacity-60" />
           <Input
-            placeholder="Rechercher un événement..."
-            className="pl-12 h-11 bg-card/50 border-none shadow-sm rounded-xl font-bold"
+            placeholder="Rechercher..."
+            className="pl-10 h-10 bg-white border-gray-100 shadow-sm rounded-xl font-medium text-xs"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <div className="flex gap-2 w-full md:w-auto">
-          <Button variant="outline" className="h-11 rounded-xl border-2 font-bold gap-2 flex-1 md:flex-none">
-            <Filter size={18} strokeWidth={2.5} /> Filtrer
+          <Button variant="outline" size="sm" className="h-10 rounded-xl border-gray-100 bg-white font-bold gap-2 flex-1 md:flex-none text-[11px] uppercase tracking-wider">
+            <Filter size={16} /> Filtrer
           </Button>
-          <Button variant="outline" className="h-11 rounded-xl border-2 font-bold gap-2 flex-1 md:flex-none">
-            <Calendar size={18} strokeWidth={2.5} /> Date
+          <Button variant="outline" size="sm" className="h-10 rounded-xl border-gray-100 bg-white font-bold gap-2 flex-1 md:flex-none text-[11px] uppercase tracking-wider">
+            <Calendar size={16} /> Date
           </Button>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-40 gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground font-bold">Récupération de vos événements...</p>
+        <div className="flex flex-col items-center justify-center py-24 gap-2">
+          <Loader2 className="h-10 w-10 animate-spin text-primary opacity-40" />
+          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Récupération...</p>
         </div>
       ) : filteredEvents.length === 0 ? (
-        <Card className="border-none shadow-xl bg-card/60 backdrop-blur-sm rounded-[2rem] p-20 text-center flex flex-col items-center space-y-6">
-          <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center">
-            <Ticket className="h-12 w-12 text-muted-foreground" />
+        <Card className="border-none shadow-sm bg-white rounded-2xl p-16 text-center flex flex-col items-center space-y-4 border border-gray-50">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+            <Ticket className="h-8 w-8 text-muted-foreground opacity-40" />
           </div>
-          <div className="space-y-2">
-            <h3 className="text-2xl font-black">Aucun événement trouvé</h3>
-            <p className="text-muted-foreground font-medium max-w-md mx-auto">
-              {searchTerm
-                ? "Aucun événement ne correspond à votre recherche. Essayez d'autres termes."
-                : "Vous n'avez pas encore créé d'événement pour cette communauté."}
+          <div className="space-y-1">
+            <h3 className="text-lg font-bold">Aucun résultat</h3>
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+              {searchTerm ? "Aucun événement ne correspond." : "Vous n'avez pas encore créé d'événement."}
             </p>
           </div>
           {!searchTerm && (
             <Link to="/create">
-              <Button className="h-12 px-8 rounded-xl font-bold">Créer mon premier événement</Button>
+              <Button size="sm" className="rounded-lg font-bold text-xs">Lancer mon premier projet</Button>
             </Link>
           )}
         </Card>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredEvents.map((event) => (
-            <Card key={event.id} className="group border-none shadow-lg bg-card/60 backdrop-blur-sm rounded-[2rem] overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
-              <div className="relative h-48 overflow-hidden">
+            <Card key={event.id} className="group border-none shadow-sm bg-white rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-50 flex flex-col">
+              <div className="relative h-36 overflow-hidden">
                 <img
-                  src={event.coverImage || 'https://images.unsplash.com/photo-1574169208507-84376144848b?w=800&auto=format&fit=crop&q=60'}
+                  src={event.image || 'https://images.unsplash.com/photo-1574169208507-84376144848b?w=400&auto=format&fit=crop&q=60'}
                   alt={event.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute top-4 left-4">
-                  <Badge className="bg-background/80 backdrop-blur-md text-foreground border-none font-bold shadow-sm">
+                <div className="absolute top-3 left-3">
+                  <Badge className="bg-white/90 backdrop-blur-sm text-foreground border-none font-bold text-[8px] uppercase px-1.5 py-0 shadow-sm">
                     {event.visibility === 'public' ? '🌍 Public' : '🔒 Privé'}
                   </Badge>
                 </div>
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-3 right-3">
                   <DropdownMenu>
                     <DropdownMenuTrigger>
-                      <Button size="icon" variant="secondary" className="h-9 w-9 rounded-xl bg-background/80 backdrop-blur-md border-none shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreVertical size={18} />
+                      <Button size="icon" variant="secondary" className="h-7 w-7 rounded-lg bg-white/90 backdrop-blur-sm border-none shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                        <MoreVertical size={14} />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="rounded-xl border-none shadow-2xl">
-                      <DropdownMenuItem className="font-bold gap-2">
-                        <ExternalLink size={16} /> Voir la page
+                    <DropdownMenuContent align="end" className="rounded-lg border border-gray-100 shadow-xl p-1 min-w-[120px]">
+                      <DropdownMenuItem className="text-[10px] font-bold gap-2 cursor-pointer">
+                        <ExternalLink size={14} /> Voir
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="font-bold gap-2">
-                        <Link to={`/create/${event.id}`}>Modifier</Link>
+                      <DropdownMenuItem className="text-[10px] font-bold gap-2 cursor-pointer">
+                        <Link to={`/create/${event.id}`} className="flex items-center gap-2 w-full">Modifier</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="font-bold gap-2 text-destructive hover:bg-destructive/10"
+                        className="text-[10px] font-bold gap-2 text-destructive hover:bg-destructive/5 cursor-pointer"
                         onClick={() => handleDeleteEvent(event.id)}
                       >
-                        <Trash2 size={16} /> Supprimer
+                        <Trash2 size={14} /> Supprimer
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
               </div>
-              <CardContent className="p-6 space-y-4">
-                <div className="space-y-1">
-                  <h4 className="text-xl font-black group-hover:text-primary transition-colors line-clamp-1">{event.title}</h4>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground font-bold">
-                    <Clock size={14} className="text-primary" />
-                    {new Date(event.startDate).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} • {new Date(event.startDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+              <CardContent className="p-4 flex-1 flex flex-col space-y-3">
+                <div className="space-y-0.5">
+                  <h4 className="text-sm font-bold group-hover:text-primary transition-colors line-clamp-1">{event.title}</h4>
+                  <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground font-bold uppercase tracking-tight opacity-70">
+                    <Clock size={12} className="text-primary" />
+                    {new Date(event.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} • {new Date(event.startDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-muted-foreground font-bold italic">
-                  <MapPin size={14} className="text-primary" />
-                  <span className="line-clamp-1">{event.location}</span>
+                <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground font-bold italic opacity-70 truncate">
+                  <MapPin size={12} className="text-primary" />
+                  <span className="truncate">{event.location}</span>
                 </div>
 
-                <div className="pt-4 border-t border-muted/50 flex justify-between items-end">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Inscriptions</p>
-                    <div className="flex items-center gap-2">
-                      <div className="flex -space-x-2">
+                <div className="pt-3 border-t border-gray-50 mt-auto flex justify-between items-center">
+                  <div className="space-y-0.5">
+                    <p className="text-[8px] font-black uppercase tracking-wider text-muted-foreground opacity-50">Inscrits</p>
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex -space-x-1.5">
                         {[1, 2, 3].map((i) => (
-                          <div key={i} className="h-6 w-6 rounded-full border-2 border-background bg-muted overflow-hidden">
+                          <div key={i} className="h-5 w-5 rounded-full border-2 border-white bg-gray-100 overflow-hidden shadow-sm shrink-0">
                             <img src={`https://i.pravatar.cc/100?u=${event.id}-${i}`} alt="Avatar" />
                           </div>
                         ))}
                       </div>
-                      <span className="text-sm font-black">+{event.attendeesCount || 0}</span>
+                      <span className="text-[10px] font-bold text-foreground">+{event.attendeesCount || 0}</span>
                     </div>
                   </div>
                   <Link to={`/events/${event.id}`}>
-                    <Button variant="ghost" className="h-10 w-10 rounded-xl hover:bg-primary/10 text-primary p-0">
-                      <ChevronRight size={24} strokeWidth={3} />
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-primary/5 text-primary">
+                      <ChevronRight size={20} strokeWidth={3} />
                     </Button>
                   </Link>
                 </div>
