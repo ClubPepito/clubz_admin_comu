@@ -130,6 +130,24 @@ export const chatService = {
   delete: (id: string) => api.delete(`/chats/${id}`),
 };
 
+export const channelService = {
+  getAll: (communityId: string) => api.get(`/communities/${communityId}/channels`),
+  createCategory: (communityId: string, name: string) => 
+    api.post(`/communities/${communityId}/channels/categories`, { name }),
+  renameCategory: (communityId: string, categoryId: string, name: string) => 
+    api.patch(`/communities/${communityId}/channels/categories/${categoryId}`, { name }),
+  deleteCategory: (communityId: string, categoryId: string) => 
+    api.delete(`/communities/${communityId}/channels/categories/${categoryId}`),
+  createChannel: (communityId: string, categoryId: string, name: string, type: 'text' | 'announcement') => {
+    console.log('API CALL: createChannel', { communityId, categoryId, name, type });
+    return api.post(`/communities/${communityId}/channels/${categoryId}/channels`, { name, type });
+  },
+  renameChannel: (communityId: string, channelId: string, name: string) => 
+    api.patch(`/communities/${communityId}/channels/channel/${channelId}`, { name }),
+  deleteChannel: (communityId: string, channelId: string) => 
+    api.delete(`/communities/${communityId}/channels/channel/${channelId}`),
+};
+
 export const storageService = {
   upload: (file: File) => {
     const formData = new FormData();
