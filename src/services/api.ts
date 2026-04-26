@@ -111,9 +111,15 @@ export const communityService = {
 
 export const postService = {
   getAll: (communityId: string) => api.get(`/posts/community/${communityId}`),
+  getOne: (id: string) => api.get(`/posts/${id}`),
   create: (data: any) => api.post('/posts', data),
   delete: (id: string) => api.delete(`/posts/${id}`),
   like: (id: string) => api.post(`/posts/${id}/like`),
+};
+
+export const commentService = {
+  getByPost: (postId: string) => api.get(`/posts/${postId}/comments`),
+  delete: (postId: string, commentId: string) => api.delete(`/posts/${postId}/comments/${commentId}`),
 };
 
 export const roomService = {

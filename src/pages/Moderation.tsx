@@ -23,7 +23,7 @@ import {
   Share2
 } from 'lucide-react';
 import { ModerationChat } from '@/components/ModerationChat';
-import { postService, communityService, storageService, chatService } from '../services/api';
+import { postService, communityService, storageService, chatService, commentService } from '../services/api';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -138,6 +138,27 @@ const RichText = ({ content, entities }: { content: string, entities?: any }) =>
 };
 
 const CommentsSidebar = ({ post, onClose }: { post: any, onClose: () => void }) => {
+  const [comments, setComments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (post?.id) {
+      fetchComments();
+    }
+  }, [post?.id]);
+
+  const fetchComments = async () => {
+    try {
+      setLoading(true);
+      const res = await commentService.getByPost(post.id);
+      setComments(res.data || []);
+    } catch (err) {
+      toast.error('Erreur chargement commentaires');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ x: '100%' }}
@@ -149,7 +170,7 @@ const CommentsSidebar = ({ post, onClose }: { post: any, onClose: () => void }) 
       <div className="p-4 border-b border-gray-50 flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-[#1a1a1a]">Commentaires</h3>
-          <p className="text-[10px] text-gray-400 font-medium">{post.author?.name || 'Thomas'}</p>
+          <p className="text-[10px] text-gray-400 font-medium">{post.author?.name || post.user?.name}</p>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-8 w-8 hover:bg-gray-100">
           <X size={16} className="text-gray-400" />
@@ -157,25 +178,38 @@ const CommentsSidebar = ({ post, onClose }: { post: any, onClose: () => void }) 
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
-        {MOCK_COMMENTS.map((comment) => (
-          <div key={comment.id} className="flex gap-3">
-            <Avatar className="h-8 w-8 rounded-full mt-0.5 border border-gray-100">
-              <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.author.email}`} />
-              <AvatarFallback className="bg-gray-100 text-[10px] font-bold">{comment.author.name[0]}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm">
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-[11px] font-bold text-[#1a1a1a]">{comment.author.name}</span>
-                  <span className="text-[9px] text-gray-400">
-                    {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+        {loading ? (
+          <div className="flex items-center justify-center h-40">
+            <Loader2 className="animate-spin text-primary h-6 w-6" />
+          </div>
+        ) : comments.length > 0 ? (
+          comments.map((comment) => (
+            <div key={comment.id} className="flex gap-3">
+              <Avatar className="h-8 w-8 rounded-full mt-0.5 border border-gray-100">
+                <AvatarImage src={comment.author?.avatar} />
+                <AvatarFallback className="bg-gray-100 text-[10px] font-bold">
+                  {(comment.author?.name || "U")[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[11px] font-bold text-[#1a1a1a]">{comment.author?.name || 'Anonyme'}</span>
+                    <span className="text-[9px] text-gray-400">
+                      {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-600 leading-normal font-medium">{comment.content}</p>
                 </div>
-                <p className="text-[11px] text-gray-600 leading-normal font-medium">{comment.content}</p>
               </div>
             </div>
+          ))
+        ) : (
+          <div className="text-center py-20 opacity-30">
+            <MessageCircle className="mx-auto mb-2" size={24} />
+            <p className="text-[10px] font-bold uppercase tracking-widest">Aucun commentaire</p>
           </div>
-        ))}
+        )}
       </div>
 
       <div className="p-4 border-t border-gray-50 bg-gray-50/30">
@@ -281,12 +315,14 @@ const PostCard = ({ post, onDelete, onCommentClick }: { post: any, onDelete: (id
                   <Heart size={8} className="text-white fill-current" />
                 </div>
               </div>
-              <span className="text-[10px] text-[#707070] font-bold">{post.reactionsCount || 0}</span>
+              <span className="text-[10px] text-[#707070] font-bold">
+                {(post.stats?.likeCount || 0) + (post.stats?.heartCount || 0) + (post.stats?.flameCount || 0)}
+              </span>
             </div>
             <div className="flex items-center gap-2 text-[10px] text-[#707070] font-bold uppercase tracking-tighter">
-              <span>{post.commentsCount || 0} Commentaires</span>
+              <span>{post.stats?.replyCount || 0} Commentaires</span>
               <span className="opacity-30">•</span>
-              <span>{post.sharesCount || 0} Partages</span>
+              <span>{post.stats?.repostCount || 0} Partages</span>
             </div>
           </div>
 
