@@ -196,7 +196,7 @@ const CommentsSidebar = ({ post, onClose }: { post: any, onClose: () => void }) 
                   <div className="flex items-center justify-between mb-0.5">
                     <span className="text-[11px] font-bold text-[#1a1a1a]">{comment.author?.name || 'Anonyme'}</span>
                     <span className="text-[9px] text-gray-400">
-                      {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {formatRelativeTime(comment.createdAt)}
                     </span>
                   </div>
                   <p className="text-[11px] text-gray-600 leading-normal font-medium">{comment.content}</p>
@@ -227,11 +227,23 @@ const CommentsSidebar = ({ post, onClose }: { post: any, onClose: () => void }) 
   );
 };
 
+const formatRelativeTime = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return "À l'instant";
+  if (diffInSeconds < 3600) return `Il y a ${Math.floor(diffInSeconds / 60)} min`;
+  if (diffInSeconds < 86400) {
+    if (date.getDate() === now.getDate()) {
+      return `Aujourd'hui à ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    return `Hier à ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
 const PostCard = ({ post, onDelete, onCommentClick }: { post: any, onDelete: (id: string) => void, onCommentClick: (post: any) => void }) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  };
 
   return (
     <motion.div
@@ -254,7 +266,7 @@ const PostCard = ({ post, onDelete, onCommentClick }: { post: any, onDelete: (id
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-[#1a1a1a]">{post.author?.name || post.user?.name || 'Utilisateur'}</span>
                 <div className="flex items-center gap-1.5 text-[10px] text-[#707070]">
-                  <span>{formatDate(post.createdAt)}</span>
+                  <span>{formatRelativeTime(post.createdAt)}</span>
                   <span>•</span>
                   <span className="text-primary font-bold uppercase tracking-tight">#{post.community?.name || 'COMMUNAUTÉ'}</span>
                 </div>
