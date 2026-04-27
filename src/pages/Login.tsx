@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lock, Mail, Loader2, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { APP_NAME } from '../constants/app';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -40,10 +41,8 @@ const Login = () => {
 
       <div className="w-full max-w-md p-6 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="flex flex-col items-center mb-10">
-          <div className="w-16 h-16 rounded-[2rem] bg-primary flex items-center justify-center font-bold text-3xl text-white shadow-2xl shadow-primary/40 mb-6">
-            C
-          </div>
-          <h1 className="text-4xl font-black tracking-tighter mb-2">Clubz Admin</h1>
+          <img src="/logo.png" alt="Logo" className="w-16 h-16 rounded-[2rem] shadow-2xl shadow-primary/40 mb-6" />
+          <h1 className="text-4xl font-black tracking-tighter mb-2">{APP_NAME} Admin</h1>
           <p className="text-muted-foreground font-medium text-center">Gérez vos communautés avec élégance.</p>
         </div>
 
@@ -61,7 +60,7 @@ const Login = () => {
                   <Input 
                     id="email" 
                     type="email" 
-                    placeholder="organisateur@clubz.app" 
+                    placeholder="organisateur@klyb.app" 
                     className="pl-12 h-14 bg-muted/30 border-2 border-transparent focus-visible:border-primary/30 rounded-2xl text-base font-bold transition-all"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}

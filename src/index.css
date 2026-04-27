@@ -6,28 +6,28 @@
   /* Tailwind v4 direct colors */
   --color-primary: #2A7B9B;
   --color-primary-foreground: #FFFFFF;
-  
+
   --color-secondary: #DDF2EE;
   --color-secondary-foreground: #1E5A73;
-  
+
   --color-background: #F9FAFB;
   --color-foreground: #111827;
-  
+
   --color-card: #FFFFFF;
   --color-card-foreground: #111827;
-  
+
   --color-popover: #FFFFFF;
   --color-popover-foreground: #111827;
-  
+
   --color-muted: #F3F4F6;
   --color-muted-foreground: #6B7280;
-  
+
   --color-accent: #E9F2F5;
   --color-accent-foreground: #2A7B9B;
-  
+
   --color-destructive: #B91C1C;
   --color-destructive-foreground: #FFFFFF;
-  
+
   --color-border: #E5E7EB;
   --color-input: #E5E7EB;
   --color-ring: #2A7B9B;
@@ -92,10 +92,11 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
-  
+
   /* Reset link styles explicitly to avoid blue/underlined default */
   a {
     text-decoration: none;

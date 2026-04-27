@@ -31,6 +31,7 @@ import { CommunityProvider, useCommunity } from './context/CommunityContext';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { APP_NAME } from '@/constants/app';
 
 const SidebarLink = ({ to, icon: Icon, label, active }: { to: string, icon: any, label: string, active: boolean }) => (
   <Link
@@ -68,9 +69,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
       {/* Sidebar */}
       <aside className="w-64 border-r bg-card flex flex-col p-6 sticky top-0 h-screen shadow-sm z-50">
         <div className="flex items-center gap-3 mb-8 px-2">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center font-bold text-white shadow-lg shadow-primary/30">C</div>
+          <img src="/logo.png" alt="Logo" className="w-9 h-9 rounded-xl shadow-lg shadow-primary/30" />
           <div className="flex flex-col">
-            <span className="text-lg font-bold leading-none tracking-tight">Clubz</span>
+            <span className="text-lg font-bold leading-none tracking-tight">{APP_NAME}</span>
             <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-1">Admin Panel</span>
           </div>
         </div>
