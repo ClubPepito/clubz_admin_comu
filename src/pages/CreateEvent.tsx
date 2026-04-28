@@ -15,12 +15,12 @@ import {
   Image as ImageIcon,
   X
 } from 'lucide-react';
-import { eventService, communityService, storageService } from '../services/api';
+import { eventService, storageService } from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from '@/lib/utils';
@@ -468,7 +468,7 @@ const CreateEvent = () => {
                     </button>
                   </div>
                   {formData.isRecurring && (
-                    <Select value={formData.recurrenceRule} onValueChange={(val) => setFormData({...formData, recurrenceRule: val})}>
+                    <Select value={formData.recurrenceRule || undefined} onValueChange={(val) => setFormData({...formData, recurrenceRule: val || ''})}>
                       <SelectTrigger className="h-8 text-[10px] bg-white border-primary/20">
                         <SelectValue placeholder="Choisir la fréquence..." />
                       </SelectTrigger>

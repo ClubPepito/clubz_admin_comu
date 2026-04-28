@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useCommunity } from '../context/CommunityContext';
-import { 
+import {
   Users, 
-  Ticket, 
   TrendingUp, 
-  Clock, 
   MapPin, 
   Plus,
   ArrowUpRight,

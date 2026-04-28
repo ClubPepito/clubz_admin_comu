@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useCommunity } from '../context/CommunityContext';
 import { 
   ShieldAlert, 
@@ -9,25 +9,19 @@ import {
   Filter, 
   Loader2,
   Heart,
-  Plus,
   Send,
-  Image as ImageIcon,
   X,
   MessageCircle,
-  Hash,
-  ChevronLeft,
-  Smile,
   MapPin,
   Check,
   ThumbsUp,
   Share2
 } from 'lucide-react';
 import { ModerationChat } from '@/components/ModerationChat';
-import { postService, communityService, storageService, chatService, commentService } from '../services/api';
+import { postService, commentService } from '../services/api';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
@@ -41,21 +35,7 @@ import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-// Mock data for comments since backend doesn't have it yet
-const MOCK_COMMENTS = [
-  {
-    id: '1',
-    author: { name: 'Sarah Wilson', email: 'sarah@example.com' },
-    content: 'Incroyable cette photo ! Ça donne trop envie d\'y être.',
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    id: '2',
-    author: { name: 'Marc Dupont', email: 'marc@example.com' },
-    content: 'On organise une sortie là-bas bientôt ?',
-    createdAt: new Date(Date.now() - 1800000).toISOString(),
-  }
-];
+
 
 // Sub-component for Polls
 const PollDisplay = ({ poll }: { poll: any }) => {
