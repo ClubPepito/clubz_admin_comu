@@ -6,14 +6,10 @@ import {
   Settings,
   Trash2,
   Edit2,
-  ChevronDown,
-  ChevronRight,
   MessageSquare,
   Send,
   MoreVertical,
   User,
-  PlusCircle,
-  X,
   Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -257,7 +253,7 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
                   </span>
                   <div className="flex items-center gap-1 transition-opacity">
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuTrigger onClick={(e) => e.stopPropagation()}>
                         <div className="p-0.5 hover:bg-muted rounded text-muted-foreground transition-colors cursor-pointer">
                           <MoreVertical size={10} />
                         </div>
@@ -311,7 +307,7 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
 
                       <div className={`absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${selectedChannel?.id === channel.id ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                          <DropdownMenuTrigger>
                             <div className="p-1 hover:bg-black/5 rounded-md cursor-pointer transition-colors">
                               <Settings size={10} />
                             </div>
@@ -414,7 +410,7 @@ export const ModerationChat: React.FC<ModerationChatProps> = ({ communityId }) =
 
                         <div className="absolute right-0 top-0 opacity-0 group-hover/content:opacity-100 transition-opacity flex gap-1">
                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                            <DropdownMenuTrigger>
                               <div className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted cursor-pointer transition-colors">
                                 <MoreVertical size={12} />
                               </div>
