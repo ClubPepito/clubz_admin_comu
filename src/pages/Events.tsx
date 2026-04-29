@@ -12,7 +12,9 @@ import {
   Loader2,
   Ticket,
   ChevronRight,
-  Trash2
+  Trash2,
+  Pen,
+  Copy
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { eventService } from '../services/api';
@@ -45,6 +47,17 @@ const Events = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDuplicateEvent = async (id: string) => {
+    if (!confirm('Voulez-vous vraiment dupliquer cet événement ?')) return;
+    // try {
+    //   await eventService.duplicate(id);
+    //   setEvents(events.map(e => e.id === id ? { ...e, duplicated: true } : e));
+    //   toast.success('Événement dupliqué');
+    // } catch (err) {
+    //   toast.error('Erreur lors de la duplication');
+    // }
   };
 
   const handleDeleteEvent = async (id: string) => {
@@ -147,10 +160,13 @@ const Events = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="rounded-lg border border-gray-100 shadow-xl p-1 min-w-[120px]">
                       <DropdownMenuItem className="text-[10px] font-bold gap-2 cursor-pointer">
-                        <ExternalLink size={14} /> Voir
+                        <Link to={`/events/${event.id}`} className="flex items-center gap-2 w-full"><ExternalLink size={14} /> Voir</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem className="text-[10px] font-bold gap-2 cursor-pointer">
-                        <Link to={`/create/${event.id}`} className="flex items-center gap-2 w-full">Modifier</Link>
+                        <Link to={`/create/${event.id}`} className="flex items-center gap-2 w-full"><Pen size={14} /> Modifier</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-[10px] font-bold gap-2 cursor-pointer" onClick={() => handleDuplicateEvent(event.id)}>
+                        <Link to={`/create/${event.id}`} className="flex items-center gap-2 w-full"><Copy size={14} /> Dupliquer</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-[10px] font-bold gap-2 text-destructive hover:bg-destructive/5 cursor-pointer"

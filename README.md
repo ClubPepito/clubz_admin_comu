@@ -71,3 +71,8 @@ export default defineConfig([
   },
 ])
 ```
+
+
+## Observability contract
+
+This app exposes a Prometheus-compatible placeholder on `GET /metrics` (dev + preview) for centralized scraping.

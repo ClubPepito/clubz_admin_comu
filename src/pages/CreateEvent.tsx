@@ -156,7 +156,7 @@ const CreateEvent = () => {
     }
     try {
       setSubmitting(true);
-      
+
       // Clean up ticket types to send null for empty dates
       const cleanedData = {
         ...formData,
@@ -171,14 +171,14 @@ const CreateEvent = () => {
 
       if (isEditMode) await eventService.update(id!, cleanedData);
       else await eventService.create(cleanedData);
-      
+
       toast.success('Publié !');
       navigate('/events');
-    } catch (err: any) { 
+    } catch (err: any) {
       console.error('Submit failed', err);
-      toast.error('Erreur lors de la publication'); 
-    } finally { 
-      setSubmitting(false); 
+      toast.error('Erreur lors de la publication');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -187,7 +187,7 @@ const CreateEvent = () => {
   const steps = [
     { id: 'general', label: 'Infos', icon: Sparkles },
     { id: 'tickets', label: 'Billets', icon: Ticket },
-    { id: 'form', label: 'Form', icon: HelpCircle },
+    { id: 'form', label: 'Formulaire', icon: HelpCircle },
     { id: 'visibility', label: 'Publier', icon: Eye }
   ];
   const currentStepIndex = steps.findIndex(s => s.id === tab);
@@ -212,9 +212,9 @@ const CreateEvent = () => {
       {/* Stepper */}
       <div className="relative mb-8 px-6">
         <div className="absolute top-[18px] left-[42px] right-[42px] h-0.5 bg-gray-100 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-primary transition-all duration-500 ease-in-out" 
-            style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }} 
+          <div
+            className="h-full bg-primary transition-all duration-500 ease-in-out"
+            style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}
           />
         </div>
         <div className="relative flex justify-between">
@@ -243,7 +243,7 @@ const CreateEvent = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Communauté</Label>
-                  <Select value={formData.communityId} onValueChange={(val: string | null) => setFormData({...formData, communityId: val || ''})}>
+                  <Select value={formData.communityId} onValueChange={(val: string | null) => setFormData({ ...formData, communityId: val || '' })}>
                     <SelectTrigger className="h-9 text-xs">
                       {communities.find(c => c.id === formData.communityId)?.name || "Choisir..."}
                     </SelectTrigger>
@@ -269,14 +269,14 @@ const CreateEvent = () => {
                 <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Lieu</Label>
                 <div className="relative">
                   <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
-                  <Input 
-                    placeholder="Rechercher une adresse réelle..." 
-                    className="h-9 pl-9 text-xs" 
-                    value={addressSearch || formData.location} 
+                  <Input
+                    placeholder="Rechercher une adresse réelle..."
+                    className="h-9 pl-9 text-xs"
+                    value={addressSearch || formData.location}
                     onChange={(e) => {
                       setAddressSearch(e.target.value);
                       if (!e.target.value) setFormData({ ...formData, location: '', latitude: null, longitude: null });
-                    }} 
+                    }}
                   />
                 </div>
                 {addressSuggestions.length > 0 && (
@@ -286,8 +286,8 @@ const CreateEvent = () => {
                         key={idx}
                         className="w-full text-left px-4 py-2.5 text-[10px] font-medium hover:bg-primary/5 transition-colors border-b border-gray-50 last:border-none flex items-start gap-3"
                         onClick={() => {
-                          setFormData({ 
-                            ...formData, 
+                          setFormData({
+                            ...formData,
                             location: suggestion.display_name,
                             latitude: parseFloat(suggestion.lat),
                             longitude: parseFloat(suggestion.lon)
@@ -308,7 +308,7 @@ const CreateEvent = () => {
                 <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Description</Label>
                 <textarea className="w-full min-h-[80px] rounded-lg border border-gray-100 bg-gray-50/30 px-3 py-2 text-xs font-medium focus:ring-1 focus:ring-primary/20 outline-none resize-none" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Image de l'événement</Label>
@@ -316,7 +316,7 @@ const CreateEvent = () => {
                     {formData.image ? (
                       <div className="relative w-24 h-24 rounded-xl overflow-hidden group">
                         <img src={formData.image} className="w-full h-full object-cover" />
-                        <button onClick={() => setFormData({...formData, image: ''})} className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Trash2 size={16} /></button>
+                        <button onClick={() => setFormData({ ...formData, image: '' })} className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><Trash2 size={16} /></button>
                       </div>
                     ) : (
                       <label className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-100 bg-gray-50/30 flex flex-col items-center justify-center cursor-pointer hover:border-primary/20 hover:bg-primary/[0.02] transition-all group">
@@ -336,16 +336,16 @@ const CreateEvent = () => {
                     )}
                     <div className="flex-1 space-y-1.5">
                       <Label className="text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Tags</Label>
-                      <Input 
-                        placeholder="Sport, Musique, Networking... (séparés par des virgules)" 
-                        className="h-8 text-[10px]" 
-                        value={formData.tags.join(', ')} 
-                        onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })} 
+                      <Input
+                        placeholder="Sport, Musique, Networking... (séparés par des virgules)"
+                        className="h-8 text-[10px]"
+                        value={formData.tags.join(', ')}
+                        onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })}
                       />
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Co-organisateurs</Label>
                   <div className="p-3 rounded-xl border border-gray-100 bg-gray-50/30 min-h-[96px] space-y-2">
@@ -354,7 +354,7 @@ const CreateEvent = () => {
                         formData.coHostIds.map(id => (
                           <Badge key={id} variant="secondary" className="bg-white border-gray-100 text-[9px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 group">
                             {id.slice(0, 8)}...
-                            <X size={10} className="cursor-pointer hover:text-destructive" onClick={() => setFormData({...formData, coHostIds: formData.coHostIds.filter(cid => cid !== id)})} />
+                            <X size={10} className="cursor-pointer hover:text-destructive" onClick={() => setFormData({ ...formData, coHostIds: formData.coHostIds.filter(cid => cid !== id) })} />
                           </Badge>
                         ))
                       ) : (
@@ -383,7 +383,7 @@ const CreateEvent = () => {
                 <div className="col-span-3 text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Quantité</div>
                 <div className="col-span-1"></div>
               </div>
-              
+
               <div className="space-y-3">
                 {formData.ticketTypes.map((tier, idx) => (
                   <div key={idx} className="p-3 rounded-xl bg-gray-50/40 border border-gray-100/50 space-y-3 transition-all hover:bg-gray-50/80">
@@ -401,7 +401,7 @@ const CreateEvent = () => {
                         <Button variant="ghost" size="icon" onClick={() => removeTicketType(idx)} className="h-7 w-7 text-destructive hover:bg-destructive/5"><Trash2 size={14} /></Button>
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-3 gap-3 pt-1">
                       <div className="space-y-1">
                         <Label className="text-[7px] font-black uppercase tracking-widest text-muted-foreground opacity-70 ml-1">Description (optionnel)</Label>
@@ -419,7 +419,7 @@ const CreateEvent = () => {
                   </div>
                 ))}
               </div>
-              
+
               <div className="flex justify-between pt-4">
                 <Button variant="ghost" onClick={() => setTab('general')} className="h-9 text-[10px] uppercase font-bold tracking-wider">Retour</Button>
                 <Button onClick={() => setTab('form')} size="sm" className="h-9 px-8 font-bold text-[10px] uppercase tracking-wider shadow-md shadow-primary/5">Suivant</Button>
@@ -431,7 +431,7 @@ const CreateEvent = () => {
         <TabsContent value="form" className="space-y-6">
           <Card className="border-none shadow-sm rounded-2xl bg-white border border-gray-50">
             <CardHeader className="p-5 pb-2 flex justify-between items-center flex-row">
-              <CardTitle className="text-sm font-bold">Questions</CardTitle>
+              <CardTitle className="text-sm font-bold">Questionnaire de vente</CardTitle>
               <Button variant="outline" size="sm" onClick={addCustomField} className="h-7 px-3 text-[9px] font-bold uppercase"><Plus size={12} className="mr-1" /> Ajouter</Button>
             </CardHeader>
             <CardContent className="p-5 pt-4 space-y-4">
@@ -439,7 +439,7 @@ const CreateEvent = () => {
                 <div className="col-span-11 text-[8px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Question</div>
                 <div className="col-span-1"></div>
               </div>
-              
+
               <div className="space-y-2">
                 {formData.customFields.map((field, idx) => (
                   <div key={idx} className="flex gap-2 items-center">
@@ -460,15 +460,15 @@ const CreateEvent = () => {
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-black uppercase tracking-widest">Récurrence</span>
                     </div>
-                    <button 
-                      onClick={() => setFormData({ ...formData, isRecurring: !formData.isRecurring })} 
+                    <button
+                      onClick={() => setFormData({ ...formData, isRecurring: !formData.isRecurring })}
                       className={cn("text-[8px] font-black uppercase px-2.5 py-1 rounded-lg transition-all", formData.isRecurring ? "bg-primary text-white shadow-sm" : "bg-gray-200 text-gray-500")}
                     >
                       {formData.isRecurring ? 'Activé' : 'Désactivé'}
                     </button>
                   </div>
                   {formData.isRecurring && (
-                    <Select value={formData.recurrenceRule} onValueChange={(val) => setFormData({...formData, recurrenceRule: val})}>
+                    <Select value={formData.recurrenceRule} onValueChange={(val) => setFormData({ ...formData, recurrenceRule: val })}>
                       <SelectTrigger className="h-8 text-[10px] bg-white border-primary/20">
                         <SelectValue placeholder="Choisir la fréquence..." />
                       </SelectTrigger>
@@ -486,19 +486,19 @@ const CreateEvent = () => {
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-black uppercase tracking-widest">En Ligne</span>
                     </div>
-                    <button 
-                      onClick={() => setFormData({ ...formData, isOnline: !formData.isOnline })} 
+                    <button
+                      onClick={() => setFormData({ ...formData, isOnline: !formData.isOnline })}
                       className={cn("text-[8px] font-black uppercase px-2.5 py-1 rounded-lg transition-all", formData.isOnline ? "bg-primary text-white shadow-sm" : "bg-gray-200 text-gray-500")}
                     >
                       {formData.isOnline ? 'Activé' : 'Désactivé'}
                     </button>
                   </div>
                   {formData.isOnline && (
-                    <Input 
-                      placeholder="Lien de la réunion (Zoom, Meet...)" 
-                      className="h-8 text-[10px] bg-white border-primary/20" 
-                      value={formData.meetingLink || ''} 
-                      onChange={(e) => setFormData({ ...formData, meetingLink: e.target.value })} 
+                    <Input
+                      placeholder="Lien de la réunion (Zoom, Meet...)"
+                      className="h-8 text-[10px] bg-white border-primary/20"
+                      value={formData.meetingLink || ''}
+                      onChange={(e) => setFormData({ ...formData, meetingLink: e.target.value })}
                     />
                   )}
                 </div>
