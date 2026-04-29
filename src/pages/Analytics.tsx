@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { 
+import {
   ArrowUpRight,
   ArrowDownRight,
   Loader2,
@@ -8,11 +8,11 @@ import {
   ChevronRight,
   Calendar as CalendarIcon
 } from 'lucide-react';
-import { 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   AreaChart,
   Area,
@@ -43,11 +43,11 @@ const Analytics = () => {
           eventService.getGlobalHistory(selectedCommunityId),
           eventService.getAll(selectedCommunityId)
         ]);
-        
+
         setStats(statsRes.data);
         setHistory(historyRes.data || []);
-        
-        const sortedEvents = (eventsRes.data || []).sort((a: any, b: any) => 
+
+        const sortedEvents = (eventsRes.data || []).sort((a: any, b: any) =>
           (b.totalRevenue || 0) - (a.totalRevenue || 0)
         );
         setEvents(sortedEvents.slice(0, 5));
@@ -74,7 +74,7 @@ const Analytics = () => {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
       <div className="flex justify-between items-center">
         <div className="space-y-0.5">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Statistiques 📊</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Statistiques</h2>
           <p className="text-xs text-muted-foreground font-medium">Analyse de la performance globale.</p>
         </div>
         <div className="flex gap-2">
@@ -102,7 +102,7 @@ const Analytics = () => {
               <div className="text-xl font-black tracking-tighter">{item.value || '0'}</div>
               {item.change && (
                 <div className={`flex items-center gap-1 mt-1 font-bold text-[10px] ${item.change.startsWith('-') ? 'text-destructive' : 'text-success'}`}>
-                  {item.change.startsWith('-') ? <ArrowDownRight size={12} /> : <ArrowUpRight size={12} />} 
+                  {item.change.startsWith('-') ? <ArrowDownRight size={12} /> : <ArrowUpRight size={12} />}
                   {item.change}
                 </div>
               )}
@@ -123,14 +123,14 @@ const Analytics = () => {
                 <AreaChart data={history.length > 0 ? history : [{ name: '-', value: 0 }]}>
                   <defs>
                     <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#247596" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#247596" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#247596" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#247596" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 9, fill: '#9CA3AF', fontWeight: 'bold'}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 9, fill: '#9CA3AF', fontWeight: 'bold'}} />
-                  <Tooltip 
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#9CA3AF', fontWeight: 'bold' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#9CA3AF', fontWeight: 'bold' }} />
+                  <Tooltip
                     contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.08)', background: '#fff', fontSize: '10px' }}
                   />
                   <Area type="monotone" dataKey="value" stroke="#247596" strokeWidth={3} fillOpacity={1} fill="url(#colorVal)" />
@@ -150,10 +150,10 @@ const Analytics = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={history.length > 0 ? history : [{ name: '-', value: 0 }]}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 9, fill: '#9CA3AF', fontWeight: 'bold'}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 9, fill: '#9CA3AF', fontWeight: 'bold'}} />
-                  <Tooltip 
-                    cursor={{fill: 'rgba(36,117,150,0.03)'}}
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#9CA3AF', fontWeight: 'bold' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#9CA3AF', fontWeight: 'bold' }} />
+                  <Tooltip
+                    cursor={{ fill: 'rgba(36,117,150,0.03)' }}
                     contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.08)', background: '#fff', fontSize: '10px' }}
                   />
                   <Bar dataKey="value" radius={[4, 4, 0, 0]}>

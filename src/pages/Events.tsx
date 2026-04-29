@@ -51,13 +51,17 @@ const Events = () => {
 
   const handleDuplicateEvent = async (id: string) => {
     if (!confirm('Voulez-vous vraiment dupliquer cet événement ?')) return;
-    // try {
-    //   await eventService.duplicate(id);
-    //   setEvents(events.map(e => e.id === id ? { ...e, duplicated: true } : e));
-    //   toast.success('Événement dupliqué');
-    // } catch (err) {
-    //   toast.error('Erreur lors de la duplication');
-    // }
+    try {
+      setLoading(true);
+      await eventService.duplicate(id);
+      await fetchEvents();
+      toast.success('Événement dupliqué');
+    } catch (err) {
+      console.error('Failed to duplicate event', err);
+      toast.error('Erreur lors de la duplication');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteEvent = async (id: string) => {
@@ -84,7 +88,7 @@ const Events = () => {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-10">
       <div className="flex justify-between items-center">
         <div className="space-y-0.5">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Mes Événements 🗓️</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Mes Événements</h2>
           <p className="text-xs text-muted-foreground font-medium">Gérez vos prochains événements.</p>
         </div>
         <Link to="/create">
@@ -139,22 +143,17 @@ const Events = () => {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredEvents.map((event) => (
-            <Card key={event.id} className="group border-none shadow-sm bg-white rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-50 flex flex-col">
-              <div className="relative h-36 overflow-hidden">
+            <Card key={event.id} className="group p-0 gap-0 border-none shadow-sm bg-white rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-50 flex flex-col">
+              <div className="relative aspect-square overflow-hidden">
                 <img
                   src={event.image || 'https://images.unsplash.com/photo-1574169208507-84376144848b?w=400&auto=format&fit=crop&q=60'}
                   alt={event.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute top-3 left-3">
-                  <Badge className="bg-white/90 backdrop-blur-sm text-foreground border-none font-bold text-[8px] uppercase px-1.5 py-0 shadow-sm">
-                    {event.visibility === 'public' ? '🌍 Public' : '🔒 Privé'}
-                  </Badge>
-                </div>
                 <div className="absolute top-3 right-3">
                   <DropdownMenu>
                     <DropdownMenuTrigger>
-                      <Button size="icon" variant="secondary" className="h-7 w-7 rounded-lg bg-white/90 backdrop-blur-sm border-none shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button size="icon" variant="secondary" className="h-7 w-7 rounded-lg bg-white/90 backdrop-blur-sm border-none shadow-sm transition-opacity">
                         <MoreVertical size={14} />
                       </Button>
                     </DropdownMenuTrigger>
@@ -166,7 +165,7 @@ const Events = () => {
                         <Link to={`/create/${event.id}`} className="flex items-center gap-2 w-full"><Pen size={14} /> Modifier</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem className="text-[10px] font-bold gap-2 cursor-pointer" onClick={() => handleDuplicateEvent(event.id)}>
-                        <Link to={`/create/${event.id}`} className="flex items-center gap-2 w-full"><Copy size={14} /> Dupliquer</Link>
+                        <Copy size={14} /> Dupliquer
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-[10px] font-bold gap-2 text-destructive hover:bg-destructive/5 cursor-pointer"
@@ -178,37 +177,40 @@ const Events = () => {
                   </DropdownMenu>
                 </div>
               </div>
-              <CardContent className="p-4 flex-1 flex flex-col space-y-3">
-                <div className="space-y-0.5">
-                  <h4 className="text-sm font-bold group-hover:text-primary transition-colors line-clamp-1">{event.title}</h4>
-                  <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground font-bold uppercase tracking-tight opacity-70">
-                    <Clock size={12} className="text-primary" />
+              <CardContent className="p-5 flex-1 flex flex-col space-y-4">
+                <div className="space-y-2">
+                  <Badge variant="outline" className="text-[9px] font-black uppercase px-2 py-0.5 h-5 border-gray-200 text-muted-foreground w-fit tracking-wider">
+                    {event.visibility === 'public' ? '🌍 Public' : '🔒 Privé'}
+                  </Badge>
+                  <h4 className="text-base font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight">{event.title}</h4>
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-bold uppercase tracking-wide opacity-80">
+                    <Clock size={14} className="text-primary/70" />
                     {new Date(event.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} • {new Date(event.startDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground font-bold italic opacity-70 truncate">
-                  <MapPin size={12} className="text-primary" />
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium italic opacity-80">
+                  <MapPin size={14} className="text-primary/70 shrink-0" />
                   <span className="truncate">{event.location}</span>
                 </div>
 
-                <div className="pt-3 border-t border-gray-50 mt-auto flex justify-between items-center">
-                  <div className="space-y-0.5">
-                    <p className="text-[8px] font-black uppercase tracking-wider text-muted-foreground opacity-50">Inscrits</p>
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex -space-x-1.5">
+                <div className="pt-4 border-t border-gray-50 mt-auto flex justify-between items-end">
+                  <div className="space-y-1.5">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Inscrits</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex -space-x-2">
                         {[1, 2, 3].map((i) => (
-                          <div key={i} className="h-5 w-5 rounded-full border-2 border-white bg-gray-100 overflow-hidden shadow-sm shrink-0">
-                            <img src={`https://i.pravatar.cc/100?u=${event.id}-${i}`} alt="Avatar" />
+                          <div key={i} className="h-7 w-7 rounded-full border-2 border-white bg-gray-100 overflow-hidden shadow-sm shrink-0">
+                            <img src={`https://i.pravatar.cc/100?u=${event.id}-${i}`} alt="Avatar" className="w-full h-full object-cover" />
                           </div>
                         ))}
                       </div>
-                      <span className="text-[10px] font-bold text-foreground">+{event.attendeesCount || 0}</span>
+                      <span className="text-xs font-bold text-foreground">+{event.attendeesCount || 0}</span>
                     </div>
                   </div>
                   <Link to={`/events/${event.id}`}>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-primary/5 text-primary">
-                      <ChevronRight size={20} strokeWidth={3} />
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 text-primary transition-colors">
+                      <ChevronRight size={22} strokeWidth={3} />
                     </Button>
                   </Link>
                 </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { 
+import {
   Search,
   Filter,
   MoreVertical,
@@ -12,19 +12,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import toast from 'react-hot-toast';
 import { useCommunity } from '../context/CommunityContext';
@@ -76,7 +76,7 @@ const Members = () => {
     }
   };
 
-  const filteredMembers = members.filter(m => 
+  const filteredMembers = members.filter(m =>
     m.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.community?.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -86,7 +86,7 @@ const Members = () => {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-10">
       <div className="flex justify-between items-center">
         <div className="space-y-0.5">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Communauté 👥</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Communauté</h2>
           <p className="text-xs text-muted-foreground font-medium">Gérez les membres.</p>
         </div>
         <div className="flex gap-2">
@@ -137,9 +137,9 @@ const Members = () => {
           <div className="flex gap-2">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground opacity-50" />
-              <Input 
-                placeholder="Rechercher..." 
-                className="pl-9 h-9 w-48 sm:w-64 bg-white border-gray-100 shadow-sm rounded-lg font-medium text-[11px]" 
+              <Input
+                placeholder="Rechercher..."
+                className="pl-9 h-9 w-48 sm:w-64 bg-white border-gray-100 shadow-sm rounded-lg font-medium text-[11px]"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
