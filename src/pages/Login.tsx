@@ -60,7 +60,7 @@ const Login = () => {
                   <Input 
                     id="email" 
                     type="email" 
-                    placeholder="organisateur@klyb.app" 
+                    placeholder="organisateur@clubz.app" 
                     className="pl-12 h-14 bg-muted/30 border-2 border-transparent focus-visible:border-primary/30 rounded-2xl text-base font-bold transition-all"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}

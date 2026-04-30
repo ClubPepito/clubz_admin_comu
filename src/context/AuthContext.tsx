@@ -20,12 +20,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('klyb_token'));
+  const [token, setToken] = useState<string | null>(localStorage.getItem('clubz_token'));
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const initAuth = async () => {
-      const storedToken = localStorage.getItem('klyb_token');
+      const storedToken = localStorage.getItem('clubz_token');
       if (storedToken) {
         try {
           // Verify token and get user info
@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setToken(storedToken);
         } catch (err) {
           console.error('Failed to init auth', err);
-          localStorage.removeItem('klyb_token');
+          localStorage.removeItem('clubz_token');
           setToken(null);
           setUser(null);
         }
@@ -46,13 +46,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = (newToken: string, newUser: User) => {
-    localStorage.setItem('klyb_token', newToken);
+    localStorage.setItem('clubz_token', newToken);
     setToken(newToken);
     setUser(newUser);
   };
 
   const logout = () => {
-    localStorage.removeItem('klyb_token');
+    localStorage.removeItem('clubz_token');
     setToken(null);
     setUser(null);
   };
